@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>150x150 Server Spawn Interactive Blueprint</title>
+    <style>
+        :root {
+            --bg-dark: #0f0f14;
+            --bg-panel: #11111b;
+            --bg-card: #181825;
+            --grid-line: #222230;
+            --road-bg: #2a2b36;
+            --road-border: #52546c;
+            
+            /* District Color Coding */
+            --color-spawn: #f9e2af;
+            --color-citadel: #f38ba8;
+            --color-economy: #a6e3a1;
+            --color-commons: #89b4fa;
+            --color-mystic: #cba6f7;
+            
+            --text-main: #cdd6f4;
+            --text-muted: #6c7086;
+        }
+
+        body {
+            margin: 0;
+            padding: 20px;
+            background-color: var(--bg-dark);
+            font-family: 'Courier New', Courier, monospace;
+            color: var(--text-main);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        h1 {
+            margin: 0 0 5px 0;
+            font-size: 1.6rem;
+            letter-spacing: 2px;
+            color: #bac2de;
+            text-transform: uppercase;
+        }
+
+        .subtitle {
+            margin: 0;
+            font-size: 0.9rem;
+            color: var(--text-muted);
+        }
+
+        /* View Manager Layout */
+        .app-container {
+            display: flex;
+            gap: 30px;
+            align-items: flex-start;
+            justify-content: center;
+            width: 100%;
+            max-width: 1200px;
+        }
+
+        /* PAGE 1: The Interactive Blueprint Map */
+        .page {
+            display: none;
+        }
+        .page.active {
+            display: block;
+        }
+
+        .canvas-container {
+            position: relative;
+            width: 750px; /* 1 block = 5px scaling */
+            height: 750px;
+            background-color: var(--bg-panel);
+            border: 3px dashed #45475a;
+            box-shadow: 0 0 30px rgba(0,0,0,0.7);
+        }
+
+        /* Architectural Grid Mesh overlay */
+        .canvas-container::before {
+            content: "";
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                linear-gradient(to right, var(--grid-line) 1px, transparent 1px),
+                linear-gradient(to bottom, var(--grid-line) 1px, transparent 1px);
+            background-size: 50px 50px; /* Represents 10x10 block intervals */
+            opacity: 0.4;
+            pointer-events: none;
+        }
+
+        /* Highway Infrastructure system */
+        .highway {
+            position: absolute;
+            background-color: var(--road-bg);
+            box-sizing: border-box;
+        }
+        .hw-ns {
+            width: 35px; /* 7 blocks wide */
+            height: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            border-left: 1px dotted var(--road-border);
+            border-right: 1px dotted var(--road-border);
+        }
+        .hw-ew {
+            width: 100%;
+            height: 35px; /* 7 blocks wide */
+            top: 50%;
+            transform: translateY(-50%);
+            border-top: 1px dotted var(--road-border);
+            border-bottom: 1px dotted var(--road-border);
+        }
+
+        /* Spawn Core Axis */
+        .spawn-core {
+            position: absolute;
+            width: 150px; /* 30 block diameter circle boundary */
+            height: 150px;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            border: 2px dashed var(--color-spawn);
+            border-radius: 50%;
+            background-color: rgba(249, 226, 175, 0.03);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 5;
+        }
+        .spawn-label {
+            background-color: var(--bg-panel);
+            padding: 4px 8px;
+            border: 1px solid var(--color-spawn);
+            font-size: 0.75rem;
+            font-weight: bold;
+            color: var(--color-spawn);
+        }
+
+        /* Master Building Module styling */
+        .building {
+            position: absolute;
+            background-color: var(--bg-card);
+            border-radius: 2px;
+            box-sizing: border-box;
+            padding: 6px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            font-size: 0.7rem;
+            line-height: 1.1;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.4);
+            cursor: pointer;
+            transition: transform 0.2s, background-color 0.2s;
+        }
+        .building:hover {
+            transform: scale(1.05);
+            background-color: #313244;
+            z-index: 20;
+        }
+        .b-title {
+            font-weight: bold;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .b-dim {
+            font-size: 0.6rem;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+
+        /* Section Borders Assignment colors */
+        .citadel { border: 1px solid var(--color-citadel); color: var(--color-citadel); }
+        .economy { border: 1px solid var(--color-economy); color: var(--color-economy); }
+        .commons { border: 1px solid var(--color-commons); color: var(--color-commons); }
+        .mystic { border: 1px solid var(--color-mystic); color: var(--color-mystic); }
+
+        /* Precise Footprint Vectors (Scaled down explicitly to fit 750px canvas) */
+        #b-leaderboard { top: 90px; left: 50%; transform: translateX(-50%); width: 100px; height: 125px; } /* 20x25 */
+        #b-topisland    { top: 20px; left: 42%; width: 60px; height: 60px; } /* 12x12 */
+        #b-skills       { top: 40px; left: 40px; width: 90px; height: 90px; } /* 18x18 */
+        #b-dailyquests  { top: 40px; right: 40px; width: 110px; height: 80px; } /* 22x16 */
+
+        #b-crates       { top: 220px; right: 210px; width: 120px; height: 90px; } /* 24x18 */
+        #b-shops        { top: 450px; right: 100px; width: 180px; height: 70px; } /* 36x14 overall */
+        #b-auction      { top: 370px; right: 40px; width: 80px; height: 100px; } /* 16x20 */
+
+        #b-advertising  { bottom: 220px; right: 220px; width: 50px; height: 50px; } /* 10x10 */
+        #b-discord      { bottom: 160px; right: 160px; width: 50px; height: 50px; } /* 10x10 */
+        #b-pvpbarracks  { bottom: 40px; right: 40px; width: 70px; height: 80px; } /* 14x16 */
+        #b-trainingyard { bottom: 140px; left: 210px; width: 60px; height: 90px; } /* 12x18 */
+        #b-afkpark      { bottom: 40px; left: 50%; transform: translateX(-50%); width: 150px; height: 150px; border-radius: 50%; } /* 30x30 circle */
+
+        #b-playerwarps  { top: 310px; left: 210px; width: 30px; height: 30px; } /* 6x6 */
+        #b-oneblock     { top: 200px; left: 30px; width: 80px; height: 40px; } /* 16x8 */
+        #b-wizardtower  { top: 130px; left: 140px; width: 60px; height: 60px; } /* 12x12 */
+        #b-resource     { bottom: 40px; left: 40px; width: 100px; height: 75px; } /* 20x15 */
+
+        /* Perimeter Labels */
+        .border-tag {
+            position: absolute;
+            font-size: 0.65rem;
+            color: var(--text-muted);
+            background-color: var(--bg-dark);
+            padding: 2px 6px;
+        }
+        .tag-top { top: -10px; left: 50%; transform: translateX(-50%); }
+        .tag-right { right: -35px; top: 50%; transform: translateY(-50%) rotate(90deg); }
+        .tag-bottom { bottom: -10px; left: 50%; transform: translateX(-50%); }
+        .tag-left { left: -30px; top: 50%; transform: translateY(-50%) rotate(-90deg); }
+
+        /* SIDE PANEL PAGES: Specific Specifications Details View */
+        .inspect-panel {
+            width: 380px;
+            background-color: var(--bg-panel);
+            border: 2px solid #313244;
+            border-radius: 6px;
+            padding: 20px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+            box-sizing: border-box;
+            min-height: 450px;
+        }
+
+        .panel-header {
+            border-bottom: 2px dashed #313244;
+            padding-bottom: 12px;
+            margin-bottom: 15px;
+        }
+
+        .panel-zone-badge {
+            display: inline-block;
+            font-size: 0.65rem;
+            font-weight: bold;
+            padding: 2px 6px;
+            border-radius: 2px;
+            text-transform: uppercase;
+            margin-bottom: 8px;
+        }
+
+        .panel-title {
+            font-size: 1.3rem;
+            font-weight: bold;
+            margin: 0;
+        }
+
+        .spec-row {
+            margin: 12px 0;
+            font-size: 0.8rem;
+        }
+
+        .spec-label {
+            color: var(--text-muted);
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            margin-bottom: 2px;
+        }
+
+        .spec-value {
+            color: var(--text-main);
+            background-color: var(--bg-card);
+            padding: 6px;
+            border-left: 3px solid #45475a;
+        }
+
+        .we-command {
+            font-family: monospace;
+            background-color: #11111b;
+            border: 1px solid #313244;
+            color: #a6e3a1;
+            padding: 6px;
+            font-size: 0.75rem;
+            word-break: break-all;
+            margin-top: 4px;
+        }
+
+        .btn-back {
+            display: block;
+            width: 100%;
+            background-color: #313244;
+            color: var(--text-main);
+            border: none;
+            padding: 10px;
+            text-align: center;
+            font-family: inherit;
+            cursor: pointer;
+            margin-top: 20px;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+        }
+        .btn-back:hover {
+            background-color: #45475a;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>Interactive Spawn Framework</h1>
+        <div class="subtitle">Click any blueprint zone boundary footprint to switch target pages</div>
+    </header>
+
+    <div class="app-container">
+        
+        <div class="canvas-container">
+            <div class="highway hw-ns"></div>
+            <div class="highway hw-ew"></div>
+
+            <div class="border-tag tag-top">NORTH CITADEL ARC</div>
+            <div class="border-tag tag-right">EAST ECONOMY</div>
+            <div class="border-tag tag-bottom">SOUTH COMMONS</div>
+            <div class="border-tag tag-left">WEST MYSTIC WING</div>
+
+            <div class="spawn-core">
+                <div class="spawn-label">SPAWN CORE</div>
+            </div>
+
+            <div id="b-leaderboard" class="building citadel" onclick="openPage('leaderboard')">
+                <div class="b-title">Leaderboards</div><div class="b-dim">20x25</div>
+            </div>
+            <div id="b-topisland" class="building citadel" onclick="openPage('topisland')">
+                <div class="b-title">Top Island</div><div class="b-dim">12x12</div>
+            </div>
+            <div id="b-skills" class="building citadel" onclick="openPage('skills')">
+                <div class="b-title">Skills Acad.</div><div class="b-dim">18x18</div>
+            </div>
+            <div id="b-dailyquests" class="building citadel" onclick="openPage('dailyquests')">
+                <div class="b-title">Quests Tavern</div><div class="b-dim">22x16</div>
+            </div>
+
+            <div id="b-crates" class="building economy" onclick="openPage('crates')">
+                <div class="b-title">Crates Yard</div><div class="b-dim">24x18</div>
+            </div>
+            <div id="b-shops" class="building economy" onclick="openPage('shops')">
+                <div class="b-title">Shop Rows</div><div class="b-dim">36x14</div>
+            </div>
+            <div id="b-auction" class="building economy" onclick="openPage('auction')">
+                <div class="b-title">Auction House</div><div class="b-dim">16x20</div>
+            </div>
+
+            <div id="b-advertising" class="building commons" onclick="openPage('advertising')">
+                <div class="b-title">Ranks</div><div class="b-dim">10x10</div>
+            </div>
+            <div id="b-discord" class="building commons" onclick="openPage('discord')">
+                <div class="b-title">Discord</div><div class="b-dim">10x10</div>
+            </div>
+            <div id="b-pvpbarracks" class="building commons" onclick="openPage('pvp')">
+                <div class="b-title">PvP Barracks</div><div class="b-dim">14x16</div>
+            </div>
+            <div id="b-trainingyard" class="building commons" onclick="openPage('training')">
+                <div class="b-title">XP Yard</div><div class="b-dim">12x18</div>
+            </div>
+            <div id="b-afkpark" class="building commons" onclick="openPage('afk')">
+                <div class="b-title">AFK Fountain Park</div><div class="b-dim">30x30 Cir.</div>
+            </div>
+
+            <div id="b-playerwarps" class="building mystic" onclick="openPage('warps')">
+                <div class="b-title">Warps</div><div class="b-dim">6x6</div>
+            </div>
+            <div id="b-oneblock" class="building mystic" onclick="openPage('oneblock')">
+                <div class="b-title">OneBlock Portal</div><div class="b-dim">16x8</div>
+            </div>
+            <div id="b-wizardtower" class="building mystic" onclick="openPage('wizard')">
+                <div class="b-title">Mage Tower</div><div class="b-dim">12x12</div>
+            </div>
+            <div id="b-resource" class="building mystic" onclick="openPage('resource')">
+                <div class="b-title">Res. Docks</div><div class="b-dim">20x15</div>
+            </div>
+        </div>
+
+        <div class="inspect-panel">
+            
+            <div id="page-default" class="page active">
+                <div class="panel-header">
+                    <div class="panel-title">Inspection Panel</div>
+                </div>
+                <p style="font-size: 0.75rem; color: var(--text-muted); line-height: 1.4;">
+                    Select any structural footprint outline within the 150x150 build canvas tray layout window to fetch exact WorldEdit parameters, positioning rules, and layout sizes.
+                </p>
+            </div>
+
+            <div id="page-leaderboard" class="page">
+                <div class="panel-header">
+                    <div class="panel-zone-badge" style="background-color: var(--color-citadel); color: #11111b;">North Citadel</div>
+                    <div class="panel-title">Leaderboard Plaza</div>
+                </div>
+                <div class="spec-row"><div class="spec-label">Footprint Dimensions</div><div class="spec-value">20 Blocks Wide x 25 Blocks Long</div></div>
+                <div class="spec-row"><div class="spec-label">Target Placement Location</div><div class="spec-value">True North road end portal terminal axis zone</div></div>
+                <div class="spec-row"><div class="spec-label">WorldEdit Wireframe Setup</div>
+                    <div class="we-command">//pos1 (then move to corner)<br>//expand 20 north<br>//expand 25 west<br>//set orange_wool</div>
+                </div>
+            </div>
+
+            <div id="page-topisland" class="page">
+                <div class="panel-header">
+                    <div class="panel-zone-badge" style="background-color: var(--color-citadel); color: #11111b;">North Citadel</div>
+                    <div class="panel-title">Top Island Pedestal</div>
+                </div>
+                <div class="spec-row"><div class="spec-label">Footprint Dimensions</div><div class="spec-value">12 Blocks x 12 Blocks Area</div></div>
+                <div class="spec-row"><div class="spec-label">Target Placement Location</div><div class="spec-value">North-Northwest inner upper courtyard tier axis</div></div>
+                <div class="spec-row"><div class="spec-label">Structural Height Goal</div><div class="spec-value">Must tower significantly over lower tavern roof heights</div></div>
+            </div>
+
+            <div id="page-skills" class="page">
+                <div class="panel-header">
+                    <div class="panel-zone-badge" style="background-color: var(--color-citadel); color: #11111b;">North Citadel</div>
+                    <div class="panel-title">Skills Academy</div>
+                </div>
+                <div class="spec-row"><div class="spec-label">Footprint Dimensions</div><div class="spec-value">18 Blocks x 18 Blocks Base</div></div>
+                <div class="spec-row"><div class="spec-label">Target Placement Location</div><div class="spec-value">True Northwest flank layout (72 Blocks from North corner)</div></div>
+                <div class="spec-row"><div class="spec-label">Aesthetic Framework</div><div class="spec-value">Grand library profile with tall glass windows and high arches</div></div>
+            </div>
+
+            <div id="page-dailyquests" class="page">
+                <div class="panel-header">
+                    <div class="panel-zone-badge" style="background-color: var(--color-citadel); color: #11111b;">North Citadel</div>
+                    <div class="panel-title">Daily Quests Tavern</div>
+                </div>
+                <div class="spec-row"><div class="spec-label">Footprint Dimensions</div><div class="spec-value">22 Blocks x 16 Blocks Base</div></div>
+                <div class="spec-row"><div class="spec-label">Target Placement Location</div><div class="spec-value">True Northeast far flank layout zone</div></div>
+                <div class="spec-row"><div class="spec-label">Aesthetic Framework</div><div class="spec-value">Double-decker tavern profile, open-air front patio system</div></div>
+            </div>
+
+            <div id="page-crates" class="page">
+                <div class="panel-header">
+                    <div class="panel-zone-badge" style="background-color: var(--color-economy); color: #11111b;">East Economy</div>
+                    <div class="panel-title">Crates & GemShop Yard</div>
+                </div>
+                <div class="spec-row"><div class="spec-label">Footprint Dimensions</div><div class="spec-value">24 Blocks x 18 Blocks Courtyard</div></div>
+                <div class="spec-row"><div class="spec-label">Target Placement Location</div><div class="spec-value">Northeast inner junction wedge right off Spawn hub</div></div>
+                <div class="spec-row"><div class="spec-label">Layout Rules</div><div class="spec-value">GemShop merchant wagon is attached directly to the front yard edge</div></div>
+            </div>
+
+            <div id="page-shops" class="page">
+                <div class="panel-header">
+                    <div class="panel-zone-badge" style="background-color: var(--color-economy); color: #11111b;">East Economy</div>
+                    <div class="panel-title">Economic Shop Rows</div>
+                </div>
+                <div class="spec-row"><div class="spec-label">Footprint Dimensions</div><div class="spec-value">36 Blocks x 14 Blocks Total Shell Array</div></div>
+                <div class="spec-row"><div class="spec-label">Target Placement Location</div><div class="spec-value">True East inner lane (3 interconnected storefront blocks)</div></div>
+                <div class="spec-row"><div class="spec-label">Aesthetic Framework</div><div class="spec-value">Vibrant, colored wool awning variations projecting outward</div></div>
+            </div>
+
+            <div id="page-auction" class="page">
+                <div class="panel-header">
+                    <div class="panel-zone-badge" style="background-color: var(--color-economy); color: #11111b;">East Economy</div>
+                    <div class="panel-title">Auction House Bank</div>
+                </div>
+                <div class="spec-row"><div class="spec-label">Footprint Dimensions</div><div class="spec-value">16 Blocks Wide x 20 Blocks Long</div></div>
+                <div class="spec-row"><div class="spec-label">Target Placement Location</div><div class="spec-value">True East outer border edge path alignment</div></div>
+                <div class="spec-row"><div class="spec-label">Aesthetic Framework</div><div class="spec-value">Fortified heavy masonry bank architecture layout profile</div></div>
+            </div>
+
+            <div id="page-advertising" class="page">
+                <div class="panel-header">
+                    <div class="panel-zone-badge" style="background-color: var(--color-commons); color: #11111b;">South Commons</div>
+                    <div class="panel-title">Advertising Rank Stage</div>
+                </div>
+                <div class="spec-row"><div class="spec-label">Footprint Dimensions</div><div class="spec-value">10 Blocks x 10 Blocks Stage Platform</div></div>
+                <div class="spec-row"><div class="spec-label">Target Placement Location</div><div class="spec-value">Southeast Inner path sweet spot corner crossway axis</div></div>
+                <div class="spec-row"><div class="spec-label">Traffic Function</div><div class="spec-value">Town Crier podium catches high density shop movement loops</div></div>
+            </div>
+
+            <div id="page-discord" class="page">
+                <div class="panel-header">
+                    <div class="panel-zone-badge" style="background-color: var(--color-commons); color: #11111b;">South Commons</div>
+                    <div class="panel-title">Discord Community Hub</div>
+                </div>
+                <div class="spec-row"><div class="spec-label">Footprint Dimensions</div><div class="spec-value">10 Blocks x 10 Blocks Octagonal Shell</div></div>
+                <div class="spec-row"><div class="spec-label">Target Placement Location</div><div class="spec-value">Southeast middle track behind Rank Stage intersection</div></div>
+            </div>
+
+            <div id="page-pvp" class="page">
+                <div class="panel-header">
+                    <div class="panel-zone-badge" style="background-color: var(--color-commons); color: #11111b;">South Commons</div>
+                    <div class="panel-title">PvP Teleport Barracks</div>
+                </div>
+                <div class="spec-row"><div class="spec-label">Footprint Dimensions</div><div class="spec-value">14 Blocks x 16 Blocks Gatehouse Tower</div></div>
+                <div class="spec-row"><div class="spec-label">Target Placement Location</div><div class="spec-value">Far Southeast outer matrix corner border perimeter</div></div>
+            </div>
+
+            <div id="page-training" class="page">
+                <div class="panel-header">
+                    <div class="panel-zone-badge" style="background-color: var(--color-commons); color: #11111b;">South Commons</div>
+                    <div class="panel-title">Player XP Training Yard</div>
+                </div>
+                <div class="spec-row"><div class="spec-label">Footprint Dimensions</div><div class="spec-value">12 Blocks x 18 Blocks Fenced Yard</div></div>
+                <div class="spec-row"><div class="spec-label">Target Placement Location</div><div class="spec-value">Attached directly onto the inside wing of the PvP Barracks</div></div>
+            </div>
+
+            <div id="page-afk" class="page">
+                <div class="panel-header">
+                    <div class="panel-zone-badge" style="background-color: var(--color-commons); color: #11111b;">South Commons</div>
+                    <div class="panel-title">AFK Fountain Park</div>
+                </div>
+                <div class="spec-row"><div class="spec-label">Footprint Dimensions</div><div class="spec-value">30 Blocks Diameter Circle Framework</div></div>
+                <div class="spec-row"><div class="spec-label">Target Placement Location</div><div class="spec-value">True South end terminal path axis perimeter quadrant</div></div>
+                <div class="spec-row"><div class="spec-label">WorldEdit Fast Setup</div>
+                    <div class="we-command">//cyl light_blue_wool 15 1 (Build 1/4 of assets, then)<br>//rotate 90 (3 times to spin circle asset blocks)</div>
+                </div>
+            </div>
+
+            <div id="page-warps" class="page">
+                <div class="panel-header">
+                    <div class="panel-zone-badge" style="background-color: var(--color-mystic); color: #11111b;">West Mystic</div>
+                    <div class="panel-title">Playerwarps Shrine</div>
+                </div>
+                <div class="spec-row"><div class="spec-label">Footprint Dimensions</div><div class="spec-value">6 Blocks x 6 Blocks Base Matrix</div></div>
+                <div class="spec-row"><div class="spec-label">Target Placement Location</div><div class="spec-value">True West Inner road offset junction right next to Spawn</div></div>
+            </div>
+
+            <div id="page-oneblock" class="page">
+                <div class="panel-header">
+                    <div class="panel-zone-badge" style="background-color: var(--color-mystic); color: #11111b;">West Mystic</div>
+                    <div class="panel-title">OneBlock Teleport Portal</div>
+                </div>
+                <div class="spec-row"><div class="spec-label">Footprint Dimensions</div><div class="spec-value">16 Blocks x 8 Blocks Custom Crescent Hill</div></div>
+                <div class="spec-row"><div class="spec-label">Target Placement Location</div><div class="spec-value">True West outer wall boundary line terminal horizon</div></div>
+                <div class="spec-row"><div class="spec-label">WorldEdit Sand Brush Prep</div>
+                    <div class="we-command">//br sphere sand 4 (Stack up mounds, then sand changes)<br>//replacenear 20 sand dirt (Then smooth with paint tool)</div>
+                </div>
+            </div>
+
+            <div id="page-wizard" class="page">
+                <div class="panel-header">
+                    <div class="panel-zone-badge" style="background-color: var(--color-mystic); color: #11111b;">West Mystic</div>
+                    <div class="panel-title">Mage Powers Tower</div>
+                </div>
+                <div class="spec-row"><div class="spec-label">Footprint Dimensions</div><div class="spec-value">12 Blocks x 12 Blocks Cylindrical Base</div></div>
+                <div class="spec-row"><div class="spec-label">Target Placement Location</div><div class="spec-value">West-Northwest ridge slope frame tracking line (~68 Blocks out)</div></div>
+                <div class="spec-row"><div class="spec-label">Target Wireframe Height</div><div class="spec-value">Stack up corner layout pillars up to 28 blocks maximum height</div></div>
+            </div>
+
+            <div id="page-resource" class="page">
+                <div class="panel-header">
+                    <div class="panel-zone-badge" style="background-color: var(--color-mystic); color: #11111b;">West Mystic</div>
+                    <div class="panel-title">Resource Camp & Docks</div>
+                </div>
+                <div class="spec-row"><div class="spec-label">Footprint Dimensions</div><div class="spec-value">20 Blocks x 15 Blocks Layout</div></div>
+                <div class="spec-row"><div class="spec-label">Target Placement Location</div><div class="spec-value">Far Southwest outer corner border matrix zone</div></div>
+            </div>
+
+            <button class="btn-back" onclick="openPage('default')">Reset Inspector Panel View</button>
+        </div>
+    </div>
+
+    <script>
+        function openPage(pageId) {
+            // Find and hide all dynamic page element layers
+            const pages = document.querySelectorAll('.page');
+            pages.forEach(p => p.classList.remove('active'));
+            
+            // Show selected asset page details target matrix
+            const activePage = document.getElementById('page-' + pageId);
+            if(activePage) {
+                activePage.classList.add('active');
+            }
+        }
+    </script>
+</body>
+</html>
