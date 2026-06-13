@@ -1,568 +1,3887 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>150x150 Server Spawn Interactive Blueprint</title>
+    <title>Dev's View — 150×150 Spawn Builder Toolkit</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
     <style>
+        /* ═══════════════════════════════════════════════
+           DESIGN TOKENS
+           ═══════════════════════════════════════════════ */
         :root {
-            --bg-dark: #0f0f14;
-            --bg-panel: #11111b;
-            --bg-card: #181825;
-            --grid-line: #222230;
-            --road-bg: #2a2b36;
-            --road-border: #52546c;
-            
-            /* District Color Coding */
+            --bg-void: #08080c;
+            --bg-dark: #0c0c14;
+            --bg-panel: #101018;
+            --bg-card: #161622;
+            --bg-card-hover: #1e1e2e;
+            --bg-surface: #1a1a28;
+            --border-dim: #1e1e30;
+            --border-mid: #2a2a40;
+            --border-bright: #3a3a55;
+            --grid-line: #1a1a2a;
+            --grid-line-major: #252540;
+            --road-bg: rgba(42, 43, 54, 0.7);
+            --road-border: #4a4a6a;
+
+            /* District Colors */
             --color-spawn: #f9e2af;
             --color-citadel: #f38ba8;
             --color-economy: #a6e3a1;
             --color-commons: #89b4fa;
             --color-mystic: #cba6f7;
-            
-            --text-main: #cdd6f4;
-            --text-muted: #6c7086;
+
+            /* Status Colors */
+            --color-success: #a6e3a1;
+            --color-warning: #f9e2af;
+            --color-danger: #f38ba8;
+            --color-info: #89dceb;
+
+            /* Text */
+            --text-bright: #e8eaf6;
+            --text-main: #c0c4d8;
+            --text-muted: #5a5e78;
+            --text-dim: #3a3e52;
+
+            /* Fonts */
+            --font-mono: 'JetBrains Mono', 'Cascadia Code', 'Fira Code', monospace;
+            --font-ui: 'Inter', -apple-system, sans-serif;
+
+            /* Spacing */
+            --gap: 16px;
+            --radius: 6px;
+            --radius-sm: 4px;
+        }
+
+        /* ═══════════════════════════════════════════════
+           RESET & BASE
+           ═══════════════════════════════════════════════ */
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
         }
 
         body {
-            margin: 0;
-            padding: 20px;
-            background-color: var(--bg-dark);
-            font-family: 'Courier New', Courier, monospace;
+            background: var(--bg-void);
             color: var(--text-main);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
+            font-family: var(--font-mono);
+            font-size: 13px;
+            line-height: 1.5;
             min-height: 100vh;
+            overflow-x: hidden;
         }
 
-        header {
-            text-align: center;
-            margin-bottom: 20px;
+        ::selection {
+            background: rgba(203, 166, 247, 0.3);
+            color: #fff;
         }
 
-        h1 {
-            margin: 0 0 5px 0;
-            font-size: 1.6rem;
-            letter-spacing: 2px;
-            color: #bac2de;
-            text-transform: uppercase;
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
         }
 
-        .subtitle {
-            margin: 0;
-            font-size: 0.9rem;
+        ::-webkit-scrollbar-track {
+            background: var(--bg-dark);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border-mid);
+            border-radius: 3px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--border-bright);
+        }
+
+        /* ═══════════════════════════════════════════════
+           TOP DEV BAR
+           ═══════════════════════════════════════════════ */
+        .dev-bar {
+            background: linear-gradient(180deg, #0e0e18 0%, var(--bg-dark) 100%);
+            border-bottom: 1px solid var(--border-dim);
+            padding: 10px 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            backdrop-filter: blur(12px);
+        }
+
+        .dev-bar-left {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .dev-logo {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .dev-logo-icon {
+            width: 28px;
+            height: 28px;
+            background: linear-gradient(135deg, var(--color-mystic), var(--color-citadel));
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            font-weight: 700;
+            color: #0c0c14;
+        }
+
+        .dev-logo-text {
+            font-family: var(--font-ui);
+            font-weight: 700;
+            font-size: 14px;
+            color: var(--text-bright);
+            letter-spacing: -0.3px;
+        }
+
+        .dev-logo-tag {
+            font-size: 10px;
+            font-weight: 500;
+            color: var(--color-mystic);
+            background: rgba(203, 166, 247, 0.1);
+            padding: 2px 8px;
+            border-radius: 10px;
+            border: 1px solid rgba(203, 166, 247, 0.2);
+        }
+
+        .dev-bar-stats {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+        }
+
+        .stat-chip {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 11px;
             color: var(--text-muted);
         }
 
-        /* View Manager Layout */
-        .app-container {
+        .stat-chip .val {
+            color: var(--text-bright);
+            font-weight: 600;
+        }
+
+        .stat-dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+
+        .progress-ring {
             display: flex;
-            gap: 30px;
-            align-items: flex-start;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .progress-bar-track {
+            width: 100px;
+            height: 4px;
+            background: var(--border-dim);
+            border-radius: 2px;
+            overflow: hidden;
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--color-economy), var(--color-info));
+            border-radius: 2px;
+            transition: width 0.5s ease;
+        }
+
+        .progress-label {
+            font-size: 11px;
+            color: var(--text-muted);
+        }
+
+        /* ═══════════════════════════════════════════════
+           MAIN LAYOUT
+           ═══════════════════════════════════════════════ */
+        .app-layout {
+            display: grid;
+            grid-template-columns: 240px 1fr 380px;
+            gap: 0;
+            min-height: calc(100vh - 49px);
+        }
+
+        /* ═══════════════════════════════════════════════
+           LEFT SIDEBAR — BUILD CHECKLIST
+           ═══════════════════════════════════════════════ */
+        .sidebar-left {
+            background: var(--bg-dark);
+            border-right: 1px solid var(--border-dim);
+            padding: 16px 0;
+            overflow-y: auto;
+            max-height: calc(100vh - 49px);
+            position: sticky;
+            top: 49px;
+        }
+
+        .sidebar-section-title {
+            font-family: var(--font-ui);
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: var(--text-dim);
+            padding: 12px 16px 6px;
+        }
+
+        .build-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 7px 16px;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            border-left: 2px solid transparent;
+            font-size: 12px;
+        }
+
+        .build-item:hover {
+            background: rgba(255, 255, 255, 0.03);
+        }
+
+        .build-item.active {
+            background: rgba(203, 166, 247, 0.06);
+            border-left-color: var(--color-mystic);
+        }
+
+        .build-item.completed .build-item-name {
+            text-decoration: line-through;
+            color: var(--text-dim);
+        }
+
+        .build-checkbox {
+            width: 14px;
+            height: 14px;
+            border: 1.5px solid var(--border-bright);
+            border-radius: 3px;
+            display: flex;
+            align-items: center;
             justify-content: center;
+            flex-shrink: 0;
+            transition: all 0.2s ease;
+            font-size: 9px;
+            color: transparent;
+        }
+
+        .build-item.completed .build-checkbox {
+            background: var(--color-success);
+            border-color: var(--color-success);
+            color: #0c0c14;
+        }
+
+        .build-item-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+
+        .build-item-name {
+            color: var(--text-main);
+            flex: 1;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .build-item-dim {
+            font-size: 10px;
+            color: var(--text-dim);
+            flex-shrink: 0;
+        }
+
+        /* ═══════════════════════════════════════════════
+           CENTER — BLUEPRINT CANVAS
+           ═══════════════════════════════════════════════ */
+        .center-area {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            background: var(--bg-void);
+            overflow-y: auto;
+            max-height: calc(100vh - 49px);
+        }
+
+        .canvas-toolbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
             width: 100%;
-            max-width: 1200px;
+            max-width: 790px;
+            margin-bottom: 12px;
+            padding: 0 20px;
         }
 
-        /* PAGE 1: The Interactive Blueprint Map */
-        .page {
-            display: none;
-        }
-        .page.active {
-            display: block;
+        .canvas-toolbar-left {
+            display: flex;
+            gap: 6px;
         }
 
+        .tool-btn {
+            font-family: var(--font-mono);
+            font-size: 10px;
+            padding: 4px 10px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-dim);
+            border-radius: var(--radius-sm);
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .tool-btn:hover {
+            border-color: var(--border-bright);
+            color: var(--text-main);
+        }
+
+        .tool-btn.active {
+            border-color: var(--color-mystic);
+            color: var(--color-mystic);
+            background: rgba(203, 166, 247, 0.06);
+        }
+
+        .canvas-coords {
+            font-size: 10px;
+            color: var(--text-dim);
+            font-family: var(--font-mono);
+        }
+
+        /* Blueprint wrapper with axis labels */
+        .blueprint-wrapper {
+            position: relative;
+            padding-left: 30px;
+            padding-top: 30px;
+        }
+
+        /* Axis labels */
+        .axis-x {
+            position: absolute;
+            top: 0;
+            left: 30px;
+            width: 750px;
+            height: 28px;
+            display: flex;
+            align-items: flex-end;
+        }
+
+        .axis-y {
+            position: absolute;
+            top: 30px;
+            left: 0;
+            width: 28px;
+            height: 750px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .axis-tick {
+            font-size: 8px;
+            color: var(--text-dim);
+            position: absolute;
+            font-family: var(--font-mono);
+        }
+
+        .axis-label {
+            position: absolute;
+            font-size: 9px;
+            color: var(--text-dim);
+            font-family: var(--font-mono);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .axis-label-x {
+            top: 8px;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        .axis-label-y {
+            top: 50%;
+            left: -4px;
+            transform: translateY(-50%) rotate(-90deg);
+        }
+
+        /* Canvas */
         .canvas-container {
             position: relative;
-            width: 750px; /* 1 block = 5px scaling */
+            width: 750px;
             height: 750px;
-            background-color: var(--bg-panel);
-            border: 3px dashed #45475a;
-            box-shadow: 0 0 30px rgba(0,0,0,0.7);
+            background: var(--bg-dark);
+            border: 1px solid var(--border-mid);
+            box-shadow: 0 0 60px rgba(0, 0, 0, 0.5), inset 0 0 120px rgba(0, 0, 0, 0.3);
         }
 
-        /* Architectural Grid Mesh overlay */
+        /* Minor grid */
         .canvas-container::before {
             content: "";
             position: absolute;
             width: 100%;
             height: 100%;
-            background-image: 
+            background-image:
                 linear-gradient(to right, var(--grid-line) 1px, transparent 1px),
                 linear-gradient(to bottom, var(--grid-line) 1px, transparent 1px);
-            background-size: 50px 50px; /* Represents 10x10 block intervals */
-            opacity: 0.4;
+            background-size: 25px 25px;
+            opacity: 0.5;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        /* Major grid (every 50px = 10 blocks) */
+        .canvas-container::after {
+            content: "";
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background-image:
+                linear-gradient(to right, var(--grid-line-major) 1px, transparent 1px),
+                linear-gradient(to bottom, var(--grid-line-major) 1px, transparent 1px);
+            background-size: 50px 50px;
+            opacity: 0.7;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        /* District quadrant overlays */
+        .quadrant {
+            position: absolute;
+            z-index: 2;
             pointer-events: none;
         }
 
-        /* Highway Infrastructure system */
+        .q-nw {
+            top: 0;
+            left: 0;
+            width: 50%;
+            height: 50%;
+            background: linear-gradient(135deg, rgba(243, 139, 168, 0.04) 0%, transparent 70%);
+            border-right: 1px dashed rgba(243, 139, 168, 0.15);
+            border-bottom: 1px dashed rgba(243, 139, 168, 0.15);
+        }
+
+        .q-ne {
+            top: 0;
+            right: 0;
+            width: 50%;
+            height: 50%;
+            background: linear-gradient(225deg, rgba(166, 227, 161, 0.04) 0%, transparent 70%);
+            border-bottom: 1px dashed rgba(166, 227, 161, 0.15);
+        }
+
+        .q-se {
+            bottom: 0;
+            right: 0;
+            width: 50%;
+            height: 50%;
+            background: linear-gradient(315deg, rgba(137, 180, 250, 0.04) 0%, transparent 70%);
+        }
+
+        .q-sw {
+            bottom: 0;
+            left: 0;
+            width: 50%;
+            height: 50%;
+            background: linear-gradient(45deg, rgba(203, 166, 247, 0.04) 0%, transparent 70%);
+            border-right: 1px dashed rgba(203, 166, 247, 0.15);
+        }
+
+        .quadrant-label {
+            position: absolute;
+            font-size: 9px;
+            font-weight: 600;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            opacity: 0.5;
+            font-family: var(--font-ui);
+        }
+
+        .q-nw .quadrant-label {
+            top: 8px;
+            left: 10px;
+            color: var(--color-citadel);
+        }
+
+        .q-ne .quadrant-label {
+            top: 8px;
+            right: 10px;
+            color: var(--color-economy);
+        }
+
+        .q-se .quadrant-label {
+            bottom: 8px;
+            right: 10px;
+            color: var(--color-commons);
+        }
+
+        .q-sw .quadrant-label {
+            bottom: 8px;
+            left: 10px;
+            color: var(--color-mystic);
+        }
+
+        /* Highways */
         .highway {
             position: absolute;
-            background-color: var(--road-bg);
-            box-sizing: border-box;
+            background: var(--road-bg);
+            z-index: 3;
         }
+
         .hw-ns {
-            width: 35px; /* 7 blocks wide */
+            width: 35px;
             height: 100%;
             left: 50%;
             transform: translateX(-50%);
-            border-left: 1px dotted var(--road-border);
-            border-right: 1px dotted var(--road-border);
-        }
-        .hw-ew {
-            width: 100%;
-            height: 35px; /* 7 blocks wide */
-            top: 50%;
-            transform: translateY(-50%);
-            border-top: 1px dotted var(--road-border);
-            border-bottom: 1px dotted var(--road-border);
+            border-left: 1px dashed var(--road-border);
+            border-right: 1px dashed var(--road-border);
         }
 
-        /* Spawn Core Axis */
+        .hw-ew {
+            width: 100%;
+            height: 35px;
+            top: 50%;
+            transform: translateY(-50%);
+            border-top: 1px dashed var(--road-border);
+            border-bottom: 1px dashed var(--road-border);
+        }
+
+        /* Highway center lines */
+        .hw-ns::after {
+            content: "";
+            position: absolute;
+            width: 1px;
+            height: 100%;
+            left: 50%;
+            background: repeating-linear-gradient(to bottom, var(--road-border) 0px, var(--road-border) 8px, transparent 8px, transparent 16px);
+            opacity: 0.5;
+        }
+
+        .hw-ew::after {
+            content: "";
+            position: absolute;
+            height: 1px;
+            width: 100%;
+            top: 50%;
+            background: repeating-linear-gradient(to right, var(--road-border) 0px, var(--road-border) 8px, transparent 8px, transparent 16px);
+            opacity: 0.5;
+        }
+
+        /* Compass rose */
+        .compass {
+            position: absolute;
+            z-index: 10;
+            font-size: 10px;
+            font-weight: 700;
+            color: var(--text-dim);
+            font-family: var(--font-ui);
+        }
+
+        .compass-n {
+            top: 4px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: var(--color-citadel);
+        }
+
+        .compass-s {
+            bottom: 4px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: var(--color-commons);
+        }
+
+        .compass-e {
+            right: 6px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--color-economy);
+        }
+
+        .compass-w {
+            left: 6px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--color-mystic);
+        }
+
+        /* Spawn core */
         .spawn-core {
             position: absolute;
-            width: 150px; /* 30 block diameter circle boundary */
+            width: 150px;
             height: 150px;
             left: 50%;
             top: 50%;
             transform: translate(-50%, -50%);
             border: 2px dashed var(--color-spawn);
             border-radius: 50%;
-            background-color: rgba(249, 226, 175, 0.03);
+            background: radial-gradient(circle, rgba(249, 226, 175, 0.06) 0%, transparent 70%);
             display: flex;
             justify-content: center;
             align-items: center;
             z-index: 5;
         }
+
         .spawn-label {
-            background-color: var(--bg-panel);
-            padding: 4px 8px;
+            background: var(--bg-dark);
+            padding: 3px 8px;
             border: 1px solid var(--color-spawn);
-            font-size: 0.75rem;
-            font-weight: bold;
+            font-size: 9px;
+            font-weight: 700;
             color: var(--color-spawn);
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            font-family: var(--font-mono);
         }
 
-        /* Master Building Module styling */
+        .spawn-coords {
+            position: absolute;
+            bottom: -18px;
+            font-size: 8px;
+            color: var(--color-spawn);
+            opacity: 0.6;
+            white-space: nowrap;
+        }
+
+        /* ═══════════════════════════════════════════════
+           BUILDINGS
+           ═══════════════════════════════════════════════ */
         .building {
             position: absolute;
-            background-color: var(--bg-card);
-            border-radius: 2px;
-            box-sizing: border-box;
-            padding: 6px;
+            background: var(--bg-card);
+            border-radius: 3px;
+            padding: 5px;
             display: flex;
             flex-direction: column;
-            justify-content: space-between;
-            font-size: 0.7rem;
-            line-height: 1.1;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.4);
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            font-size: 9px;
+            line-height: 1.2;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
             cursor: pointer;
-            transition: transform 0.2s, background-color 0.2s;
+            transition: all 0.2s ease;
+            z-index: 6;
+            overflow: hidden;
         }
+
         .building:hover {
-            transform: scale(1.05);
-            background-color: #313244;
+            transform: scale(1.08);
             z-index: 20;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6);
         }
+
+        .building.selected {
+            z-index: 25;
+            box-shadow: 0 0 0 2px currentColor, 0 4px 20px rgba(0, 0, 0, 0.6);
+        }
+
+        .building.build-done {
+            opacity: 0.45;
+        }
+
+        .building.build-done::after {
+            content: "✓";
+            position: absolute;
+            top: 2px;
+            right: 3px;
+            font-size: 10px;
+            color: var(--color-success);
+        }
+
         .b-title {
-            font-weight: bold;
+            font-weight: 700;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
+            max-width: 100%;
+            font-size: 9px;
         }
+
         .b-dim {
-            font-size: 0.6rem;
+            font-size: 8px;
+            color: var(--text-dim);
+            margin-top: 1px;
+        }
+
+        /* District borders */
+        .citadel {
+            border: 1px solid var(--color-citadel);
+            color: var(--color-citadel);
+        }
+
+        .citadel:hover {
+            background: rgba(243, 139, 168, 0.1);
+        }
+
+        .economy {
+            border: 1px solid var(--color-economy);
+            color: var(--color-economy);
+        }
+
+        .economy:hover {
+            background: rgba(166, 227, 161, 0.1);
+        }
+
+        .commons {
+            border: 1px solid var(--color-commons);
+            color: var(--color-commons);
+        }
+
+        .commons:hover {
+            background: rgba(137, 180, 250, 0.1);
+        }
+
+        .mystic {
+            border: 1px solid var(--color-mystic);
+            color: var(--color-mystic);
+        }
+
+        .mystic:hover {
+            background: rgba(203, 166, 247, 0.1);
+        }
+
+        /* Building positions */
+        #b-leaderboard {
+            top: 90px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100px;
+            height: 125px;
+        }
+
+        #b-topisland {
+            top: 20px;
+            left: 42%;
+            width: 60px;
+            height: 60px;
+        }
+
+        #b-skills {
+            top: 40px;
+            left: 40px;
+            width: 90px;
+            height: 90px;
+        }
+
+        #b-dailyquests {
+            top: 40px;
+            right: 40px;
+            width: 110px;
+            height: 80px;
+        }
+
+        #b-crates {
+            top: 220px;
+            right: 210px;
+            width: 120px;
+            height: 90px;
+        }
+
+        #b-shops {
+            top: 450px;
+            right: 100px;
+            width: 180px;
+            height: 70px;
+        }
+
+        #b-auction {
+            top: 370px;
+            right: 40px;
+            width: 80px;
+            height: 100px;
+        }
+
+        #b-advertising {
+            bottom: 220px;
+            right: 220px;
+            width: 50px;
+            height: 50px;
+        }
+
+        #b-discord {
+            bottom: 160px;
+            right: 160px;
+            width: 50px;
+            height: 50px;
+        }
+
+        #b-pvpbarracks {
+            bottom: 40px;
+            right: 40px;
+            width: 70px;
+            height: 80px;
+        }
+
+        #b-trainingyard {
+            bottom: 140px;
+            left: 210px;
+            width: 60px;
+            height: 90px;
+        }
+
+        #b-afkpark {
+            bottom: 40px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+        }
+
+        #b-playerwarps {
+            top: 310px;
+            left: 210px;
+            width: 30px;
+            height: 30px;
+        }
+
+        #b-oneblock {
+            top: 200px;
+            left: 30px;
+            width: 80px;
+            height: 40px;
+        }
+
+        #b-wizardtower {
+            top: 130px;
+            left: 140px;
+            width: 60px;
+            height: 60px;
+        }
+
+        #b-resource {
+            bottom: 40px;
+            left: 40px;
+            width: 100px;
+            height: 75px;
+        }
+
+        /* ═══════════════════════════════════════════════
+           RIGHT PANEL — INSPECTOR
+           ═══════════════════════════════════════════════ */
+        .sidebar-right {
+            background: var(--bg-dark);
+            border-left: 1px solid var(--border-dim);
+            overflow-y: auto;
+            max-height: calc(100vh - 49px);
+            position: sticky;
+            top: 49px;
+        }
+
+        .panel-tabs {
+            display: flex;
+            border-bottom: 1px solid var(--border-dim);
+            position: sticky;
+            top: 0;
+            background: var(--bg-dark);
+            z-index: 5;
+        }
+
+        .panel-tab {
+            flex: 1;
+            padding: 10px 8px;
+            text-align: center;
+            font-size: 10px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-dim);
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            transition: all 0.15s ease;
+            font-family: var(--font-ui);
+        }
+
+        .panel-tab:hover {
             color: var(--text-muted);
-            margin-top: 2px;
         }
 
-        /* Section Borders Assignment colors */
-        .citadel { border: 1px solid var(--color-citadel); color: var(--color-citadel); }
-        .economy { border: 1px solid var(--color-economy); color: var(--color-economy); }
-        .commons { border: 1px solid var(--color-commons); color: var(--color-commons); }
-        .mystic { border: 1px solid var(--color-mystic); color: var(--color-mystic); }
+        .panel-tab.active {
+            color: var(--color-mystic);
+            border-bottom-color: var(--color-mystic);
+        }
 
-        /* Precise Footprint Vectors (Scaled down explicitly to fit 750px canvas) */
-        #b-leaderboard { top: 90px; left: 50%; transform: translateX(-50%); width: 100px; height: 125px; } /* 20x25 */
-        #b-topisland    { top: 20px; left: 42%; width: 60px; height: 60px; } /* 12x12 */
-        #b-skills       { top: 40px; left: 40px; width: 90px; height: 90px; } /* 18x18 */
-        #b-dailyquests  { top: 40px; right: 40px; width: 110px; height: 80px; } /* 22x16 */
+        .panel-content {
+            padding: 16px;
+        }
 
-        #b-crates       { top: 220px; right: 210px; width: 120px; height: 90px; } /* 24x18 */
-        #b-shops        { top: 450px; right: 100px; width: 180px; height: 70px; } /* 36x14 overall */
-        #b-auction      { top: 370px; right: 40px; width: 80px; height: 100px; } /* 16x20 */
+        .page {
+            display: none;
+        }
 
-        #b-advertising  { bottom: 220px; right: 220px; width: 50px; height: 50px; } /* 10x10 */
-        #b-discord      { bottom: 160px; right: 160px; width: 50px; height: 50px; } /* 10x10 */
-        #b-pvpbarracks  { bottom: 40px; right: 40px; width: 70px; height: 80px; } /* 14x16 */
-        #b-trainingyard { bottom: 140px; left: 210px; width: 60px; height: 90px; } /* 12x18 */
-        #b-afkpark      { bottom: 40px; left: 50%; transform: translateX(-50%); width: 150px; height: 150px; border-radius: 50%; } /* 30x30 circle */
+        .page.active {
+            display: block;
+        }
 
-        #b-playerwarps  { top: 310px; left: 210px; width: 30px; height: 30px; } /* 6x6 */
-        #b-oneblock     { top: 200px; left: 30px; width: 80px; height: 40px; } /* 16x8 */
-        #b-wizardtower  { top: 130px; left: 140px; width: 60px; height: 60px; } /* 12x12 */
-        #b-resource     { bottom: 40px; left: 40px; width: 100px; height: 75px; } /* 20x15 */
+        /* Default inspector state */
+        .inspector-empty {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 400px;
+            text-align: center;
+            gap: 16px;
+        }
 
-        /* Perimeter Labels */
-        .border-tag {
-            position: absolute;
-            font-size: 0.65rem;
+        .inspector-empty-icon {
+            font-size: 40px;
+            opacity: 0.15;
+        }
+
+        .inspector-empty-title {
+            font-family: var(--font-ui);
+            font-size: 14px;
+            font-weight: 600;
             color: var(--text-muted);
-            background-color: var(--bg-dark);
-            padding: 2px 6px;
-        }
-        .tag-top { top: -10px; left: 50%; transform: translateX(-50%); }
-        .tag-right { right: -35px; top: 50%; transform: translateY(-50%) rotate(90deg); }
-        .tag-bottom { bottom: -10px; left: 50%; transform: translateX(-50%); }
-        .tag-left { left: -30px; top: 50%; transform: translateY(-50%) rotate(-90deg); }
-
-        /* SIDE PANEL PAGES: Specific Specifications Details View */
-        .inspect-panel {
-            width: 380px;
-            background-color: var(--bg-panel);
-            border: 2px solid #313244;
-            border-radius: 6px;
-            padding: 20px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
-            box-sizing: border-box;
-            min-height: 450px;
         }
 
+        .inspector-empty-desc {
+            font-size: 11px;
+            color: var(--text-dim);
+            max-width: 260px;
+            line-height: 1.6;
+        }
+
+        /* Panel header */
         .panel-header {
-            border-bottom: 2px dashed #313244;
+            margin-bottom: 16px;
             padding-bottom: 12px;
-            margin-bottom: 15px;
+            border-bottom: 1px solid var(--border-dim);
         }
 
         .panel-zone-badge {
             display: inline-block;
-            font-size: 0.65rem;
-            font-weight: bold;
-            padding: 2px 6px;
-            border-radius: 2px;
+            font-size: 9px;
+            font-weight: 700;
+            padding: 2px 8px;
+            border-radius: 3px;
             text-transform: uppercase;
-            margin-bottom: 8px;
+            letter-spacing: 1px;
+            margin-bottom: 6px;
+            font-family: var(--font-ui);
         }
 
         .panel-title {
-            font-size: 1.3rem;
-            font-weight: bold;
+            font-family: var(--font-ui);
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--text-bright);
             margin: 0;
+            letter-spacing: -0.3px;
         }
 
-        .spec-row {
-            margin: 12px 0;
-            font-size: 0.8rem;
-        }
-
-        .spec-label {
-            color: var(--text-muted);
-            font-size: 0.7rem;
-            text-transform: uppercase;
-            margin-bottom: 2px;
-        }
-
-        .spec-value {
-            color: var(--text-main);
-            background-color: var(--bg-card);
-            padding: 6px;
-            border-left: 3px solid #45475a;
-        }
-
-        .we-command {
-            font-family: monospace;
-            background-color: #11111b;
-            border: 1px solid #313244;
-            color: #a6e3a1;
-            padding: 6px;
-            font-size: 0.75rem;
-            word-break: break-all;
+        .panel-subtitle {
+            font-size: 11px;
+            color: var(--text-dim);
             margin-top: 4px;
         }
 
-        .btn-back {
-            display: block;
-            width: 100%;
-            background-color: #313244;
+        /* Spec sections */
+        .spec-group {
+            margin-bottom: 16px;
+        }
+
+        .spec-group-title {
+            font-family: var(--font-ui);
+            font-size: 9px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: var(--text-dim);
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .spec-group-title::after {
+            content: "";
+            flex: 1;
+            height: 1px;
+            background: var(--border-dim);
+        }
+
+        .spec-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            padding: 6px 0;
+            font-size: 12px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.02);
+        }
+
+        .spec-key {
+            color: var(--text-muted);
+            font-size: 11px;
+        }
+
+        .spec-val {
+            color: var(--text-bright);
+            font-weight: 500;
+            text-align: right;
+            font-size: 12px;
+        }
+
+        /* WorldEdit command blocks */
+        .we-block {
+            background: #0a0a12;
+            border: 1px solid var(--border-dim);
+            border-radius: var(--radius-sm);
+            margin: 8px 0;
+            overflow: hidden;
+        }
+
+        .we-block-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 6px 10px;
+            background: rgba(255, 255, 255, 0.02);
+            border-bottom: 1px solid var(--border-dim);
+        }
+
+        .we-block-label {
+            font-size: 9px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-dim);
+        }
+
+        .copy-btn {
+            font-family: var(--font-mono);
+            font-size: 9px;
+            padding: 2px 8px;
+            background: transparent;
+            border: 1px solid var(--border-mid);
+            border-radius: 3px;
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .copy-btn:hover {
+            border-color: var(--color-economy);
+            color: var(--color-economy);
+        }
+
+        .copy-btn.copied {
+            border-color: var(--color-success);
+            color: var(--color-success);
+        }
+
+        .we-code {
+            padding: 10px;
+            font-family: var(--font-mono);
+            font-size: 11px;
+            color: var(--color-economy);
+            line-height: 1.8;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+
+        .we-code .comment {
+            color: var(--text-dim);
+        }
+
+        .we-code .cmd {
+            color: var(--color-economy);
+        }
+
+        .we-code .flag {
+            color: var(--color-info);
+        }
+
+        /* Block palette */
+        .palette {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+            margin: 8px 0;
+        }
+
+        .palette-block {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            padding: 3px 8px;
+            background: var(--bg-surface);
+            border: 1px solid var(--border-dim);
+            border-radius: 3px;
+            font-size: 10px;
             color: var(--text-main);
-            border: none;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .palette-block:hover {
+            border-color: var(--border-bright);
+            background: var(--bg-card-hover);
+        }
+
+        .palette-swatch {
+            width: 10px;
+            height: 10px;
+            border-radius: 2px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        /* Notes */
+        .dev-note {
+            background: rgba(137, 220, 235, 0.05);
+            border: 1px solid rgba(137, 220, 235, 0.15);
+            border-left: 3px solid var(--color-info);
+            border-radius: var(--radius-sm);
+            padding: 8px 10px;
+            margin: 10px 0;
+            font-size: 11px;
+            color: var(--text-main);
+            line-height: 1.5;
+        }
+
+        .dev-note.warning {
+            background: rgba(249, 226, 175, 0.05);
+            border-color: rgba(249, 226, 175, 0.15);
+            border-left-color: var(--color-warning);
+        }
+
+        /* Build status toggle */
+        .status-toggle {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 12px;
+            background: var(--bg-surface);
+            border: 1px solid var(--border-dim);
+            border-radius: var(--radius);
+            margin-top: 16px;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .status-toggle:hover {
+            border-color: var(--border-bright);
+        }
+
+        .status-toggle.done {
+            border-color: rgba(166, 227, 161, 0.3);
+            background: rgba(166, 227, 161, 0.05);
+        }
+
+        .status-toggle-check {
+            width: 18px;
+            height: 18px;
+            border: 2px solid var(--border-bright);
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+            color: transparent;
+            transition: all 0.2s ease;
+            flex-shrink: 0;
+        }
+
+        .status-toggle.done .status-toggle-check {
+            background: var(--color-success);
+            border-color: var(--color-success);
+            color: #0c0c14;
+        }
+
+        .status-toggle-label {
+            font-size: 12px;
+            font-weight: 500;
+            color: var(--text-main);
+            font-family: var(--font-ui);
+        }
+
+        .status-toggle-hint {
+            font-size: 10px;
+            color: var(--text-dim);
+            margin-left: auto;
+        }
+
+        /* ═══════════════════════════════════════════════
+           LEGEND PAGE
+           ═══════════════════════════════════════════════ */
+        .legend-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px;
+            background: var(--bg-surface);
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--border-dim);
+        }
+
+        .legend-color {
+            width: 14px;
+            height: 14px;
+            border-radius: 3px;
+            flex-shrink: 0;
+        }
+
+        .legend-text {
+            font-size: 11px;
+            color: var(--text-main);
+        }
+
+        .legend-text small {
+            display: block;
+            font-size: 9px;
+            color: var(--text-dim);
+            margin-top: 1px;
+        }
+
+        /* Key shortcut hints */
+        .shortcut-list {
+            margin-top: 20px;
+        }
+
+        .shortcut-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 6px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.02);
+        }
+
+        .shortcut-key {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        kbd {
+            display: inline-block;
+            padding: 2px 6px;
+            background: var(--bg-surface);
+            border: 1px solid var(--border-mid);
+            border-radius: 3px;
+            font-family: var(--font-mono);
+            font-size: 10px;
+            color: var(--text-main);
+            box-shadow: 0 1px 0 var(--border-dim);
+        }
+
+        .shortcut-desc {
+            font-size: 11px;
+            color: var(--text-muted);
+        }
+
+        /* ═══════════════════════════════════════════════
+           MEDIEVAL ADVICE SECTION
+           ═══════════════════════════════════════════════ */
+        .advice-section {
+            margin-top: 20px;
+        }
+
+        .advice-card {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-dim);
+            border-radius: var(--radius);
+            padding: 12px;
+            margin-bottom: 10px;
+        }
+
+        .advice-card-title {
+            font-family: var(--font-ui);
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-bright);
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .advice-card-body {
+            font-size: 11px;
+            color: var(--text-muted);
+            line-height: 1.6;
+        }
+
+        .advice-tag {
+            display: inline-block;
+            font-size: 9px;
+            padding: 1px 6px;
+            border-radius: 3px;
+            font-weight: 600;
+            margin-right: 4px;
+        }
+
+        /* ═══════════════════════════════════════════════
+           SEARCH & FILTER
+           ═══════════════════════════════════════════════ */
+        .search-box {
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--border-dim);
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 8px 12px;
+            background: var(--bg-surface);
+            border: 1px solid var(--border-mid);
+            border-radius: var(--radius-sm);
+            color: var(--text-main);
+            font-family: var(--font-mono);
+            font-size: 12px;
+            transition: all 0.15s ease;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: var(--color-mystic);
+            box-shadow: 0 0 0 2px rgba(203, 166, 247, 0.1);
+        }
+
+        .zone-filter {
+            display: flex;
+            gap: 6px;
+            padding: 10px 16px;
+            border-bottom: 1px solid var(--border-dim);
+            flex-wrap: wrap;
+        }
+
+        .filter-btn {
+            font-size: 10px;
+            padding: 4px 10px;
+            background: var(--bg-surface);
+            border: 1px solid var(--border-mid);
+            border-radius: var(--radius-sm);
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: all 0.15s ease;
+            font-family: var(--font-ui);
+        }
+
+        .filter-btn:hover,
+        .filter-btn.active {
+            border-color: var(--border-bright);
+            color: var(--text-bright);
+        }
+
+        .filter-btn.active {
+            background: rgba(203, 166, 247, 0.06);
+            border-color: var(--color-mystic);
+            color: var(--color-mystic);
+        }
+
+        /* ═══════════════════════════════════════════════
+           STATS PANEL
+           ═══════════════════════════════════════════════ */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 16px;
+        }
+
+        .stat-card {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-dim);
+            border-radius: var(--radius-sm);
             padding: 10px;
             text-align: center;
-            font-family: inherit;
-            cursor: pointer;
-            margin-top: 20px;
-            font-size: 0.8rem;
-            text-transform: uppercase;
         }
-        .btn-back:hover {
-            background-color: #45475a;
+
+        .stat-card-label {
+            font-size: 9px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-dim);
+            margin-bottom: 6px;
+            font-family: var(--font-ui);
+            font-weight: 600;
+        }
+
+        .stat-card-value {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--text-bright);
+            font-family: var(--font-mono);
+        }
+
+        /* ═══════════════════════════════════════════════
+           HEIGHT CHART
+           ═══════════════════════════════════════════════ */
+        .height-chart {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-dim);
+            border-radius: var(--radius-sm);
+            padding: 12px;
+            margin: 12px 0;
+        }
+
+        .height-chart-title {
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-dim);
+            margin-bottom: 10px;
+            font-family: var(--font-ui);
+        }
+
+        .height-bars {
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-around;
+            gap: 4px;
+            height: 120px;
+            background: rgba(255, 255, 255, 0.01);
+            border-radius: 3px;
+            padding: 6px 4px;
+        }
+
+        .height-bar {
+            flex: 1;
+            background: linear-gradient(to top, var(--color-economy), var(--color-mystic));
+            border-radius: 2px 2px 0 0;
+            position: relative;
+            min-height: 4px;
+            transition: all 0.2s ease;
+        }
+
+        .height-bar:hover {
+            opacity: 0.8;
+        }
+
+        .height-bar-label {
+            position: absolute;
+            bottom: -18px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 7px;
+            color: var(--text-dim);
+            white-space: nowrap;
+            width: 100%;
+            text-align: center;
+        }
+
+        /* ═══════════════════════════════════════════════
+           BULK ACTIONS
+           ═══════════════════════════════════════════════ */
+        .bulk-actions {
+            display: flex;
+            gap: 6px;
+            padding: 10px 16px;
+            border-top: 1px solid var(--border-dim);
+            border-bottom: 1px solid var(--border-dim);
+        }
+
+        .bulk-btn {
+            flex: 1;
+            font-size: 10px;
+            padding: 6px 8px;
+            background: var(--bg-surface);
+            border: 1px solid var(--border-mid);
+            border-radius: var(--radius-sm);
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: all 0.15s ease;
+            font-family: var(--font-ui);
+            text-align: center;
+        }
+
+        .bulk-btn:hover {
+            border-color: var(--color-economy);
+            color: var(--color-economy);
+        }
+
+        .bulk-btn.danger:hover {
+            border-color: var(--color-danger);
+            color: var(--color-danger);
+        }
+
+        /* ═══════════════════════════════════════════════
+           THEME TOGGLE
+           ═══════════════════════════════════════════════ */
+        .theme-toggle {
+            display: flex;
+            align-items: center;
+            width: 40px;
+            height: 20px;
+            background: var(--bg-surface);
+            border: 1px solid var(--border-mid);
+            border-radius: 10px;
+            cursor: pointer;
+            padding: 2px;
+            transition: all 0.2s ease;
+            position: relative;
+        }
+
+        .theme-toggle.light {
+            background: var(--text-bright);
+            border-color: var(--color-warning);
+        }
+
+        .theme-toggle-dot {
+            width: 16px;
+            height: 16px;
+            background: var(--border-bright);
+            border-radius: 50%;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+        }
+
+        .theme-toggle.light .theme-toggle-dot {
+            background: #000;
+            transform: translateX(20px);
+        }
+
+        /* ═══════════════════════════════════════════════
+           EXPORT/IMPORT
+           ═══════════════════════════════════════════════ */
+        .export-section {
+            display: flex;
+            gap: 6px;
+            padding: 10px 16px;
+            border-top: 1px solid var(--border-dim);
+        }
+
+        .export-btn,
+        .import-btn {
+            flex: 1;
+            font-size: 10px;
+            padding: 6px 10px;
+            background: var(--bg-surface);
+            border: 1px solid var(--border-mid);
+            border-radius: var(--radius-sm);
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: all 0.15s ease;
+            font-family: var(--font-ui);
+            text-align: center;
+        }
+
+        .export-btn:hover,
+        .import-btn:hover {
+            border-color: var(--color-info);
+            color: var(--color-info);
+        }
+
+        #import-file {
+            display: none;
+        }
+
+        /* ═══════════════════════════════════════════════
+           COORDINATE BADGES
+           ═══════════════════════════════════════════════ */
+        .coord-badge {
+            display: inline-block;
+            background: rgba(137, 180, 250, 0.1);
+            border: 1px solid rgba(137, 180, 250, 0.3);
+            border-radius: 3px;
+            padding: 3px 6px;
+            font-size: 10px;
+            color: var(--color-info);
+            font-family: var(--font-mono);
+            cursor: pointer;
+            transition: all 0.15s ease;
+            margin-top: 4px;
+        }
+
+        .coord-badge:hover {
+            border-color: var(--color-info);
+            background: rgba(137, 180, 250, 0.2);
+        }
+
+        /* ═══════════════════════════════════════════════
+           LIGHT THEME
+           ═══════════════════════════════════════════════ */
+        body.light-theme {
+            --bg-void: #f5f5f7;
+            --bg-dark: #fafafa;
+            --bg-panel: #ffffff;
+            --bg-card: #f0f0f5;
+            --bg-card-hover: #e8e8f0;
+            --bg-surface: #ececf1;
+            --border-dim: #e0e0e8;
+            --border-mid: #d0d0d8;
+            --border-bright: #b8b8c8;
+            --grid-line: #e8e8ec;
+            --grid-line-major: #dcdce4;
+            --road-bg: rgba(200, 200, 210, 0.7);
+            --road-border: #9898a8;
+            --text-bright: #1a1a2a;
+            --text-main: #3a3a4a;
+            --text-muted: #7a7a8a;
+            --text-dim: #b0b0c0;
+        }
+
+        /* ═══════════════════════════════════════════════
+           ANIMATIONS
+           ═══════════════════════════════════════════════ */
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(6px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .page.active {
+            animation: fadeIn 0.2s ease;
+        }
+
+        @keyframes pulse-glow {
+
+            0%,
+            100% {
+                box-shadow: 0 0 0 0 rgba(249, 226, 175, 0.1);
+            }
+
+            50% {
+                box-shadow: 0 0 20px 4px rgba(249, 226, 175, 0.1);
+            }
+        }
+
+        .spawn-core {
+            animation: pulse-glow 4s ease-in-out infinite;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .build-item.hidden {
+            display: none;
+        }
+
+        /* ═══════════════════════════════════════════════
+           ADD BUILDING MODAL
+           ═══════════════════════════════════════════════ */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal-dialog {
+            background: var(--bg-panel);
+            border: 1px solid var(--border-bright);
+            border-radius: var(--radius);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8);
+            max-width: 500px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            padding: 16px;
+            border-bottom: 1px solid var(--border-dim);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .modal-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--text-bright);
+            font-family: var(--font-ui);
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            font-size: 20px;
+            cursor: pointer;
+            padding: 0;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: color 0.2s ease;
+        }
+
+        .modal-close:hover {
+            color: var(--text-bright);
+        }
+
+        .modal-body {
+            padding: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        .form-group-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-dim);
+            margin-bottom: 6px;
+            font-family: var(--font-ui);
+        }
+
+        .form-input,
+        .form-select {
+            width: 100%;
+            padding: 8px 10px;
+            background: var(--bg-surface);
+            border: 1px solid var(--border-mid);
+            border-radius: var(--radius-sm);
+            color: var(--text-main);
+            font-family: var(--font-mono);
+            font-size: 12px;
+            transition: all 0.15s ease;
+        }
+
+        .form-input:focus,
+        .form-select:focus {
+            outline: none;
+            border-color: var(--color-mystic);
+            box-shadow: 0 0 0 2px rgba(203, 166, 247, 0.1);
+        }
+
+        .form-select {
+            cursor: pointer;
+        }
+
+        .modal-footer {
+            padding: 12px 20px;
+            border-top: 1px solid var(--border-dim);
+            display: flex;
+            gap: 8px;
+            justify-content: flex-end;
+        }
+
+        .btn-primary,
+        .btn-secondary {
+            padding: 8px 16px;
+            border-radius: var(--radius-sm);
+            font-size: 11px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            font-family: var(--font-ui);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .btn-primary {
+            background: var(--color-mystic);
+            color: #0c0c14;
+            border: 1px solid var(--color-mystic);
+        }
+
+        .btn-primary:hover {
+            opacity: 0.8;
+        }
+
+        .btn-secondary {
+            background: transparent;
+            color: var(--text-muted);
+            border: 1px solid var(--border-mid);
+        }
+
+        .btn-secondary:hover {
+            border-color: var(--color-info);
+            color: var(--color-info);
+        }
+
+        .form-hint {
+            font-size: 9px;
+            color: var(--text-dim);
+            margin-top: 4px;
+            font-family: var(--font-mono);
+        }
+
+        .add-building-btn {
+            font-family: var(--font-mono);
+            font-size: 10px;
+            padding: 4px 10px;
+            background: var(--color-mystic);
+            border: 1px solid var(--color-mystic);
+            border-radius: var(--radius-sm);
+            color: #0c0c14;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            font-weight: 600;
+        }
+
+        .add-building-btn:hover {
+            opacity: 0.8;
         }
     </style>
 </head>
+
 <body>
 
-    <header>
-        <h1>Interactive Spawn Framework</h1>
-        <div class="subtitle">Click any blueprint zone boundary footprint to switch target pages</div>
-    </header>
-
-    <div class="app-container">
-        
-        <div class="canvas-container">
-            <div class="highway hw-ns"></div>
-            <div class="highway hw-ew"></div>
-
-            <div class="border-tag tag-top">NORTH CITADEL ARC</div>
-            <div class="border-tag tag-right">EAST ECONOMY</div>
-            <div class="border-tag tag-bottom">SOUTH COMMONS</div>
-            <div class="border-tag tag-left">WEST MYSTIC WING</div>
-
-            <div class="spawn-core">
-                <div class="spawn-label">SPAWN CORE</div>
-            </div>
-
-            <div id="b-leaderboard" class="building citadel" onclick="openPage('leaderboard')">
-                <div class="b-title">Leaderboards</div><div class="b-dim">20x25</div>
-            </div>
-            <div id="b-topisland" class="building citadel" onclick="openPage('topisland')">
-                <div class="b-title">Top Island</div><div class="b-dim">12x12</div>
-            </div>
-            <div id="b-skills" class="building citadel" onclick="openPage('skills')">
-                <div class="b-title">Skills Acad.</div><div class="b-dim">18x18</div>
-            </div>
-            <div id="b-dailyquests" class="building citadel" onclick="openPage('dailyquests')">
-                <div class="b-title">Quests Tavern</div><div class="b-dim">22x16</div>
-            </div>
-
-            <div id="b-crates" class="building economy" onclick="openPage('crates')">
-                <div class="b-title">Crates Yard</div><div class="b-dim">24x18</div>
-            </div>
-            <div id="b-shops" class="building economy" onclick="openPage('shops')">
-                <div class="b-title">Shop Rows</div><div class="b-dim">36x14</div>
-            </div>
-            <div id="b-auction" class="building economy" onclick="openPage('auction')">
-                <div class="b-title">Auction House</div><div class="b-dim">16x20</div>
-            </div>
-
-            <div id="b-advertising" class="building commons" onclick="openPage('advertising')">
-                <div class="b-title">Ranks</div><div class="b-dim">10x10</div>
-            </div>
-            <div id="b-discord" class="building commons" onclick="openPage('discord')">
-                <div class="b-title">Discord</div><div class="b-dim">10x10</div>
-            </div>
-            <div id="b-pvpbarracks" class="building commons" onclick="openPage('pvp')">
-                <div class="b-title">PvP Barracks</div><div class="b-dim">14x16</div>
-            </div>
-            <div id="b-trainingyard" class="building commons" onclick="openPage('training')">
-                <div class="b-title">XP Yard</div><div class="b-dim">12x18</div>
-            </div>
-            <div id="b-afkpark" class="building commons" onclick="openPage('afk')">
-                <div class="b-title">AFK Fountain Park</div><div class="b-dim">30x30 Cir.</div>
-            </div>
-
-            <div id="b-playerwarps" class="building mystic" onclick="openPage('warps')">
-                <div class="b-title">Warps</div><div class="b-dim">6x6</div>
-            </div>
-            <div id="b-oneblock" class="building mystic" onclick="openPage('oneblock')">
-                <div class="b-title">OneBlock Portal</div><div class="b-dim">16x8</div>
-            </div>
-            <div id="b-wizardtower" class="building mystic" onclick="openPage('wizard')">
-                <div class="b-title">Mage Tower</div><div class="b-dim">12x12</div>
-            </div>
-            <div id="b-resource" class="building mystic" onclick="openPage('resource')">
-                <div class="b-title">Res. Docks</div><div class="b-dim">20x15</div>
+    <!-- ═══════════════ DEV BAR ═══════════════ -->
+    <div class="dev-bar">
+        <div class="dev-bar-left">
+            <div class="dev-logo">
+                <div class="dev-logo-icon">⚒</div>
+                <span class="dev-logo-text">Spawn Builder</span>
+                <span class="dev-logo-tag">DEV VIEW</span>
             </div>
         </div>
-
-        <div class="inspect-panel">
-            
-            <div id="page-default" class="page active">
-                <div class="panel-header">
-                    <div class="panel-title">Inspection Panel</div>
-                </div>
-                <p style="font-size: 0.75rem; color: var(--text-muted); line-height: 1.4;">
-                    Select any structural footprint outline within the 150x150 build canvas tray layout window to fetch exact WorldEdit parameters, positioning rules, and layout sizes.
-                </p>
+        <div style="display: flex; align-items: center; gap: 12px;">
+            <span style="font-size: 11px; color: var(--text-muted);">Theme:</span>
+            <div class="theme-toggle" id="theme-toggle" title="Toggle light/dark theme"></div>
+        </div>
+        <div class="dev-bar-stats">
+            <div class="stat-chip">
+                <span class="stat-dot" style="background: var(--color-spawn);"></span>
+                Grid <span class="val">150×150</span>
             </div>
-
-            <div id="page-leaderboard" class="page">
-                <div class="panel-header">
-                    <div class="panel-zone-badge" style="background-color: var(--color-citadel); color: #11111b;">North Citadel</div>
-                    <div class="panel-title">Leaderboard Plaza</div>
-                </div>
-                <div class="spec-row"><div class="spec-label">Footprint Dimensions</div><div class="spec-value">20 Blocks Wide x 25 Blocks Long</div></div>
-                <div class="spec-row"><div class="spec-label">Target Placement Location</div><div class="spec-value">True North road end portal terminal axis zone</div></div>
-                <div class="spec-row"><div class="spec-label">WorldEdit Wireframe Setup</div>
-                    <div class="we-command">//pos1 (then move to corner)<br>//expand 20 north<br>//expand 25 west<br>//set orange_wool</div>
-                </div>
+            <div class="stat-chip">
+                Structures <span class="val" id="stats-total">15</span>
             </div>
-
-            <div id="page-topisland" class="page">
-                <div class="panel-header">
-                    <div class="panel-zone-badge" style="background-color: var(--color-citadel); color: #11111b;">North Citadel</div>
-                    <div class="panel-title">Top Island Pedestal</div>
+            <div class="progress-ring">
+                <span class="progress-label">Build</span>
+                <div class="progress-bar-track">
+                    <div class="progress-bar-fill" id="progress-fill" style="width: 0%"></div>
                 </div>
-                <div class="spec-row"><div class="spec-label">Footprint Dimensions</div><div class="spec-value">12 Blocks x 12 Blocks Area</div></div>
-                <div class="spec-row"><div class="spec-label">Target Placement Location</div><div class="spec-value">North-Northwest inner upper courtyard tier axis</div></div>
-                <div class="spec-row"><div class="spec-label">Structural Height Goal</div><div class="spec-value">Must tower significantly over lower tavern roof heights</div></div>
+                <span class="progress-label" id="progress-pct">0%</span>
             </div>
-
-            <div id="page-skills" class="page">
-                <div class="panel-header">
-                    <div class="panel-zone-badge" style="background-color: var(--color-citadel); color: #11111b;">North Citadel</div>
-                    <div class="panel-title">Skills Academy</div>
-                </div>
-                <div class="spec-row"><div class="spec-label">Footprint Dimensions</div><div class="spec-value">18 Blocks x 18 Blocks Base</div></div>
-                <div class="spec-row"><div class="spec-label">Target Placement Location</div><div class="spec-value">True Northwest flank layout (72 Blocks from North corner)</div></div>
-                <div class="spec-row"><div class="spec-label">Aesthetic Framework</div><div class="spec-value">Grand library profile with tall glass windows and high arches</div></div>
+            <div class="stat-chip">
+                <span class="stat-dot" style="background: var(--color-success);"></span>
+                Done <span class="val" id="stats-done">0</span>/<span class="val">15</span>
             </div>
-
-            <div id="page-dailyquests" class="page">
-                <div class="panel-header">
-                    <div class="panel-zone-badge" style="background-color: var(--color-citadel); color: #11111b;">North Citadel</div>
-                    <div class="panel-title">Daily Quests Tavern</div>
-                </div>
-                <div class="spec-row"><div class="spec-label">Footprint Dimensions</div><div class="spec-value">22 Blocks x 16 Blocks Base</div></div>
-                <div class="spec-row"><div class="spec-label">Target Placement Location</div><div class="spec-value">True Northeast far flank layout zone</div></div>
-                <div class="spec-row"><div class="spec-label">Aesthetic Framework</div><div class="spec-value">Double-decker tavern profile, open-air front patio system</div></div>
-            </div>
-
-            <div id="page-crates" class="page">
-                <div class="panel-header">
-                    <div class="panel-zone-badge" style="background-color: var(--color-economy); color: #11111b;">East Economy</div>
-                    <div class="panel-title">Crates & GemShop Yard</div>
-                </div>
-                <div class="spec-row"><div class="spec-label">Footprint Dimensions</div><div class="spec-value">24 Blocks x 18 Blocks Courtyard</div></div>
-                <div class="spec-row"><div class="spec-label">Target Placement Location</div><div class="spec-value">Northeast inner junction wedge right off Spawn hub</div></div>
-                <div class="spec-row"><div class="spec-label">Layout Rules</div><div class="spec-value">GemShop merchant wagon is attached directly to the front yard edge</div></div>
-            </div>
-
-            <div id="page-shops" class="page">
-                <div class="panel-header">
-                    <div class="panel-zone-badge" style="background-color: var(--color-economy); color: #11111b;">East Economy</div>
-                    <div class="panel-title">Economic Shop Rows</div>
-                </div>
-                <div class="spec-row"><div class="spec-label">Footprint Dimensions</div><div class="spec-value">36 Blocks x 14 Blocks Total Shell Array</div></div>
-                <div class="spec-row"><div class="spec-label">Target Placement Location</div><div class="spec-value">True East inner lane (3 interconnected storefront blocks)</div></div>
-                <div class="spec-row"><div class="spec-label">Aesthetic Framework</div><div class="spec-value">Vibrant, colored wool awning variations projecting outward</div></div>
-            </div>
-
-            <div id="page-auction" class="page">
-                <div class="panel-header">
-                    <div class="panel-zone-badge" style="background-color: var(--color-economy); color: #11111b;">East Economy</div>
-                    <div class="panel-title">Auction House Bank</div>
-                </div>
-                <div class="spec-row"><div class="spec-label">Footprint Dimensions</div><div class="spec-value">16 Blocks Wide x 20 Blocks Long</div></div>
-                <div class="spec-row"><div class="spec-label">Target Placement Location</div><div class="spec-value">True East outer border edge path alignment</div></div>
-                <div class="spec-row"><div class="spec-label">Aesthetic Framework</div><div class="spec-value">Fortified heavy masonry bank architecture layout profile</div></div>
-            </div>
-
-            <div id="page-advertising" class="page">
-                <div class="panel-header">
-                    <div class="panel-zone-badge" style="background-color: var(--color-commons); color: #11111b;">South Commons</div>
-                    <div class="panel-title">Advertising Rank Stage</div>
-                </div>
-                <div class="spec-row"><div class="spec-label">Footprint Dimensions</div><div class="spec-value">10 Blocks x 10 Blocks Stage Platform</div></div>
-                <div class="spec-row"><div class="spec-label">Target Placement Location</div><div class="spec-value">Southeast Inner path sweet spot corner crossway axis</div></div>
-                <div class="spec-row"><div class="spec-label">Traffic Function</div><div class="spec-value">Town Crier podium catches high density shop movement loops</div></div>
-            </div>
-
-            <div id="page-discord" class="page">
-                <div class="panel-header">
-                    <div class="panel-zone-badge" style="background-color: var(--color-commons); color: #11111b;">South Commons</div>
-                    <div class="panel-title">Discord Community Hub</div>
-                </div>
-                <div class="spec-row"><div class="spec-label">Footprint Dimensions</div><div class="spec-value">10 Blocks x 10 Blocks Octagonal Shell</div></div>
-                <div class="spec-row"><div class="spec-label">Target Placement Location</div><div class="spec-value">Southeast middle track behind Rank Stage intersection</div></div>
-            </div>
-
-            <div id="page-pvp" class="page">
-                <div class="panel-header">
-                    <div class="panel-zone-badge" style="background-color: var(--color-commons); color: #11111b;">South Commons</div>
-                    <div class="panel-title">PvP Teleport Barracks</div>
-                </div>
-                <div class="spec-row"><div class="spec-label">Footprint Dimensions</div><div class="spec-value">14 Blocks x 16 Blocks Gatehouse Tower</div></div>
-                <div class="spec-row"><div class="spec-label">Target Placement Location</div><div class="spec-value">Far Southeast outer matrix corner border perimeter</div></div>
-            </div>
-
-            <div id="page-training" class="page">
-                <div class="panel-header">
-                    <div class="panel-zone-badge" style="background-color: var(--color-commons); color: #11111b;">South Commons</div>
-                    <div class="panel-title">Player XP Training Yard</div>
-                </div>
-                <div class="spec-row"><div class="spec-label">Footprint Dimensions</div><div class="spec-value">12 Blocks x 18 Blocks Fenced Yard</div></div>
-                <div class="spec-row"><div class="spec-label">Target Placement Location</div><div class="spec-value">Attached directly onto the inside wing of the PvP Barracks</div></div>
-            </div>
-
-            <div id="page-afk" class="page">
-                <div class="panel-header">
-                    <div class="panel-zone-badge" style="background-color: var(--color-commons); color: #11111b;">South Commons</div>
-                    <div class="panel-title">AFK Fountain Park</div>
-                </div>
-                <div class="spec-row"><div class="spec-label">Footprint Dimensions</div><div class="spec-value">30 Blocks Diameter Circle Framework</div></div>
-                <div class="spec-row"><div class="spec-label">Target Placement Location</div><div class="spec-value">True South end terminal path axis perimeter quadrant</div></div>
-                <div class="spec-row"><div class="spec-label">WorldEdit Fast Setup</div>
-                    <div class="we-command">//cyl light_blue_wool 15 1 (Build 1/4 of assets, then)<br>//rotate 90 (3 times to spin circle asset blocks)</div>
-                </div>
-            </div>
-
-            <div id="page-warps" class="page">
-                <div class="panel-header">
-                    <div class="panel-zone-badge" style="background-color: var(--color-mystic); color: #11111b;">West Mystic</div>
-                    <div class="panel-title">Playerwarps Shrine</div>
-                </div>
-                <div class="spec-row"><div class="spec-label">Footprint Dimensions</div><div class="spec-value">6 Blocks x 6 Blocks Base Matrix</div></div>
-                <div class="spec-row"><div class="spec-label">Target Placement Location</div><div class="spec-value">True West Inner road offset junction right next to Spawn</div></div>
-            </div>
-
-            <div id="page-oneblock" class="page">
-                <div class="panel-header">
-                    <div class="panel-zone-badge" style="background-color: var(--color-mystic); color: #11111b;">West Mystic</div>
-                    <div class="panel-title">OneBlock Teleport Portal</div>
-                </div>
-                <div class="spec-row"><div class="spec-label">Footprint Dimensions</div><div class="spec-value">16 Blocks x 8 Blocks Custom Crescent Hill</div></div>
-                <div class="spec-row"><div class="spec-label">Target Placement Location</div><div class="spec-value">True West outer wall boundary line terminal horizon</div></div>
-                <div class="spec-row"><div class="spec-label">WorldEdit Sand Brush Prep</div>
-                    <div class="we-command">//br sphere sand 4 (Stack up mounds, then sand changes)<br>//replacenear 20 sand dirt (Then smooth with paint tool)</div>
-                </div>
-            </div>
-
-            <div id="page-wizard" class="page">
-                <div class="panel-header">
-                    <div class="panel-zone-badge" style="background-color: var(--color-mystic); color: #11111b;">West Mystic</div>
-                    <div class="panel-title">Mage Powers Tower</div>
-                </div>
-                <div class="spec-row"><div class="spec-label">Footprint Dimensions</div><div class="spec-value">12 Blocks x 12 Blocks Cylindrical Base</div></div>
-                <div class="spec-row"><div class="spec-label">Target Placement Location</div><div class="spec-value">West-Northwest ridge slope frame tracking line (~68 Blocks out)</div></div>
-                <div class="spec-row"><div class="spec-label">Target Wireframe Height</div><div class="spec-value">Stack up corner layout pillars up to 28 blocks maximum height</div></div>
-            </div>
-
-            <div id="page-resource" class="page">
-                <div class="panel-header">
-                    <div class="panel-zone-badge" style="background-color: var(--color-mystic); color: #11111b;">West Mystic</div>
-                    <div class="panel-title">Resource Camp & Docks</div>
-                </div>
-                <div class="spec-row"><div class="spec-label">Footprint Dimensions</div><div class="spec-value">20 Blocks x 15 Blocks Layout</div></div>
-                <div class="spec-row"><div class="spec-label">Target Placement Location</div><div class="spec-value">Far Southwest outer corner border matrix zone</div></div>
-            </div>
-
-            <button class="btn-back" onclick="openPage('default')">Reset Inspector Panel View</button>
         </div>
     </div>
 
+    <!-- ═══════════════ MAIN LAYOUT ═══════════════ -->
+    <div class="app-layout">
+
+        <!-- ═══════════════ LEFT SIDEBAR ═══════════════ -->
+        <div class="sidebar-left">
+            <div class="search-box">
+                <input type="text" class="search-input" id="search-input" placeholder="Search buildings..."
+                    onkeyup="filterBuildings()">
+            </div>
+            <div class="zone-filter">
+                <button class="filter-btn active" data-zone="all" onclick="filterByZone('all')">All</button>
+                <button class="filter-btn" data-zone="citadel" onclick="filterByZone('citadel')">North</button>
+                <button class="filter-btn" data-zone="economy" onclick="filterByZone('economy')">East</button>
+                <button class="filter-btn" data-zone="commons" onclick="filterByZone('commons')">South</button>
+                <button class="filter-btn" data-zone="mystic" onclick="filterByZone('mystic')">West</button>
+            </div>
+            <div class="bulk-actions">
+                <button class="bulk-btn" onclick="markAllComplete()">✓ Mark All</button>
+                <button class="bulk-btn danger" onclick="clearAllComplete()">✗ Clear All</button>
+            </div>
+            <div class="sidebar-section-title">North Citadel</div>
+            <div class="build-item" data-id="leaderboard" data-zone="citadel" onclick="selectBuilding('leaderboard')">
+                <div class="build-checkbox">✓</div>
+                <div class="build-item-dot" style="background: var(--color-citadel);"></div>
+                <span class="build-item-name">Leaderboard Plaza</span>
+                <span class="build-item-dim">20×25</span>
+            </div>
+            <div class="build-item" data-id="topisland" data-zone="citadel" onclick="selectBuilding('topisland')">
+                <div class="build-checkbox">✓</div>
+                <div class="build-item-dot" style="background: var(--color-citadel);"></div>
+                <span class="build-item-name">Top Island</span>
+                <span class="build-item-dim">12×12</span>
+            </div>
+            <div class="build-item" data-id="skills" data-zone="citadel" onclick="selectBuilding('skills')">
+                <div class="build-checkbox">✓</div>
+                <div class="build-item-dot" style="background: var(--color-citadel);"></div>
+                <span class="build-item-name">Skills Academy</span>
+                <span class="build-item-dim">18×18</span>
+            </div>
+            <div class="build-item" data-id="dailyquests" data-zone="citadel" onclick="selectBuilding('dailyquests')">
+                <div class="build-checkbox">✓</div>
+                <div class="build-item-dot" style="background: var(--color-citadel);"></div>
+                <span class="build-item-name">Quests Tavern</span>
+                <span class="build-item-dim">22×16</span>
+            </div>
+
+            <div class="sidebar-section-title">East Economy</div>
+            <div class="build-item" data-id="crates" data-zone="economy" onclick="selectBuilding('crates')">
+                <div class="build-checkbox">✓</div>
+                <div class="build-item-dot" style="background: var(--color-economy);"></div>
+                <span class="build-item-name">Crates & GemShop</span>
+                <span class="build-item-dim">24×18</span>
+            </div>
+            <div class="build-item" data-id="shops" data-zone="economy" onclick="selectBuilding('shops')">
+                <div class="build-checkbox">✓</div>
+                <div class="build-item-dot" style="background: var(--color-economy);"></div>
+                <span class="build-item-name">Shop Rows</span>
+                <span class="build-item-dim">36×14</span>
+            </div>
+            <div class="build-item" data-id="auction" data-zone="economy" onclick="selectBuilding('auction')">
+                <div class="build-checkbox">✓</div>
+                <div class="build-item-dot" style="background: var(--color-economy);"></div>
+                <span class="build-item-name">Auction House</span>
+                <span class="build-item-dim">16×20</span>
+            </div>
+
+            <div class="sidebar-section-title">South Commons</div>
+            <div class="build-item" data-id="advertising" data-zone="commons" onclick="selectBuilding('advertising')">
+                <div class="build-checkbox">✓</div>
+                <div class="build-item-dot" style="background: var(--color-commons);"></div>
+                <span class="build-item-name">Rank Stage</span>
+                <span class="build-item-dim">10×10</span>
+            </div>
+            <div class="build-item" data-id="discord" data-zone="commons" onclick="selectBuilding('discord')">
+                <div class="build-checkbox">✓</div>
+                <div class="build-item-dot" style="background: var(--color-commons);"></div>
+                <span class="build-item-name">Discord Hub</span>
+                <span class="build-item-dim">10×10</span>
+            </div>
+            <div class="build-item" data-id="pvp" data-zone="commons" onclick="selectBuilding('pvp')">
+                <div class="build-checkbox">✓</div>
+                <div class="build-item-dot" style="background: var(--color-commons);"></div>
+                <span class="build-item-name">PvP Barracks</span>
+                <span class="build-item-dim">14×16</span>
+            </div>
+            <div class="build-item" data-id="training" data-zone="commons" onclick="selectBuilding('training')">
+                <div class="build-checkbox">✓</div>
+                <div class="build-item-dot" style="background: var(--color-commons);"></div>
+                <span class="build-item-name">XP Yard</span>
+                <span class="build-item-dim">12×18</span>
+            </div>
+            <div class="build-item" data-id="afk" data-zone="commons" onclick="selectBuilding('afk')">
+                <div class="build-checkbox">✓</div>
+                <div class="build-item-dot" style="background: var(--color-commons);"></div>
+                <span class="build-item-name">AFK Fountain</span>
+                <span class="build-item-dim">30⌀</span>
+            </div>
+
+            <div class="sidebar-section-title">West Mystic</div>
+            <div class="build-item" data-id="warps" data-zone="mystic" onclick="selectBuilding('warps')">
+                <div class="build-checkbox">✓</div>
+                <div class="build-item-dot" style="background: var(--color-mystic);"></div>
+                <span class="build-item-name">Warps Shrine</span>
+                <span class="build-item-dim">6×6</span>
+            </div>
+            <div class="build-item" data-id="oneblock" data-zone="mystic" onclick="selectBuilding('oneblock')">
+                <div class="build-checkbox">✓</div>
+                <div class="build-item-dot" style="background: var(--color-mystic);"></div>
+                <span class="build-item-name">OneBlock Portal</span>
+                <span class="build-item-dim">16×8</span>
+            </div>
+            <div class="build-item" data-id="wizard" data-zone="mystic" onclick="selectBuilding('wizard')">
+                <div class="build-checkbox">✓</div>
+                <div class="build-item-dot" style="background: var(--color-mystic);"></div>
+                <span class="build-item-name">Mage Tower</span>
+                <span class="build-item-dim">12×12</span>
+            </div>
+            <div class="build-item" data-id="resource" data-zone="mystic" onclick="selectBuilding('resource')">
+                <div class="build-checkbox">✓</div>
+                <div class="build-item-dot" style="background: var(--color-mystic);"></div>
+                <span class="build-item-name">Resource Docks</span>
+                <span class="build-item-dim">20×15</span>
+            </div>
+        </div>
+
+        <!-- ═══════════════ CENTER CANVAS ═══════════════ -->
+        <div class="center-area">
+            <div class="canvas-toolbar">
+                <div class="canvas-toolbar-left">
+                    <button class="tool-btn active" onclick="toggleZones(this)" id="btn-zones">Zones</button>
+                    <button class="tool-btn active" onclick="toggleGrid(this)" id="btn-grid">Grid</button>
+                    <button class="tool-btn" onclick="toggleDone(this)" id="btn-done">Hide Done</button>
+                    <button class="add-building-btn" onclick="openAddBuildingModal()">+ Add Building</button>
+                </div>
+                <div class="canvas-coords" id="cursor-coords">Hover canvas for coords</div>
+            </div>
+
+            <div class="blueprint-wrapper">
+                <div class="axis-label axis-label-x">X Axis (West ← → East)</div>
+                <div class="axis-label axis-label-y">Z Axis (North ← → South)</div>
+
+                <div class="axis-x" id="axis-x"></div>
+                <div class="axis-y" id="axis-y"></div>
+
+                <div class="canvas-container" id="canvas" onmousemove="updateCoords(event)"
+                    onmouseleave="clearCoords()">
+                    <!-- Quadrant overlays -->
+                    <div class="quadrant q-nw" id="zone-nw">
+                        <div class="quadrant-label">N. Citadel</div>
+                    </div>
+                    <div class="quadrant q-ne" id="zone-ne">
+                        <div class="quadrant-label">E. Economy</div>
+                    </div>
+                    <div class="quadrant q-se" id="zone-se">
+                        <div class="quadrant-label">S. Commons</div>
+                    </div>
+                    <div class="quadrant q-sw" id="zone-sw">
+                        <div class="quadrant-label">W. Mystic</div>
+                    </div>
+
+                    <!-- Highways -->
+                    <div class="highway hw-ns"></div>
+                    <div class="highway hw-ew"></div>
+
+                    <!-- Compass -->
+                    <div class="compass compass-n">N</div>
+                    <div class="compass compass-s">S</div>
+                    <div class="compass compass-e">E</div>
+                    <div class="compass compass-w">W</div>
+
+                    <!-- Spawn Core -->
+                    <div class="spawn-core">
+                        <div class="spawn-label">0, 0</div>
+                        <div class="spawn-coords">Spawn Core (r=15)</div>
+                    </div>
+
+                    <!-- Buildings -->
+                    <div id="b-leaderboard" class="building citadel" onclick="selectBuilding('leaderboard')">
+                        <div class="b-title">Leaderboards</div>
+                        <div class="b-dim">20×25</div>
+                    </div>
+                    <div id="b-topisland" class="building citadel" onclick="selectBuilding('topisland')">
+                        <div class="b-title">Top Island</div>
+                        <div class="b-dim">12×12</div>
+                    </div>
+                    <div id="b-skills" class="building citadel" onclick="selectBuilding('skills')">
+                        <div class="b-title">Skills Acad.</div>
+                        <div class="b-dim">18×18</div>
+                    </div>
+                    <div id="b-dailyquests" class="building citadel" onclick="selectBuilding('dailyquests')">
+                        <div class="b-title">Quests Tavern</div>
+                        <div class="b-dim">22×16</div>
+                    </div>
+
+                    <div id="b-crates" class="building economy" onclick="selectBuilding('crates')">
+                        <div class="b-title">Crates Yard</div>
+                        <div class="b-dim">24×18</div>
+                    </div>
+                    <div id="b-shops" class="building economy" onclick="selectBuilding('shops')">
+                        <div class="b-title">Shop Rows</div>
+                        <div class="b-dim">36×14</div>
+                    </div>
+                    <div id="b-auction" class="building economy" onclick="selectBuilding('auction')">
+                        <div class="b-title">Auction House</div>
+                        <div class="b-dim">16×20</div>
+                    </div>
+
+                    <div id="b-advertising" class="building commons" onclick="selectBuilding('advertising')">
+                        <div class="b-title">Ranks</div>
+                        <div class="b-dim">10×10</div>
+                    </div>
+                    <div id="b-discord" class="building commons" onclick="selectBuilding('discord')">
+                        <div class="b-title">Discord</div>
+                        <div class="b-dim">10×10</div>
+                    </div>
+                    <div id="b-pvpbarracks" class="building commons" onclick="selectBuilding('pvp')">
+                        <div class="b-title">PvP Barracks</div>
+                        <div class="b-dim">14×16</div>
+                    </div>
+                    <div id="b-trainingyard" class="building commons" onclick="selectBuilding('training')">
+                        <div class="b-title">XP Yard</div>
+                        <div class="b-dim">12×18</div>
+                    </div>
+                    <div id="b-afkpark" class="building commons" onclick="selectBuilding('afk')">
+                        <div class="b-title">AFK Park</div>
+                        <div class="b-dim">30⌀</div>
+                    </div>
+
+                    <div id="b-playerwarps" class="building mystic" onclick="selectBuilding('warps')">
+                        <div class="b-title">Warp</div>
+                    </div>
+                    <div id="b-oneblock" class="building mystic" onclick="selectBuilding('oneblock')">
+                        <div class="b-title">OneBlock</div>
+                        <div class="b-dim">16×8</div>
+                    </div>
+                    <div id="b-wizardtower" class="building mystic" onclick="selectBuilding('wizard')">
+                        <div class="b-title">Mage Tower</div>
+                        <div class="b-dim">12×12</div>
+                    </div>
+                    <div id="b-resource" class="building mystic" onclick="selectBuilding('resource')">
+                        <div class="b-title">Res. Docks</div>
+                        <div class="b-dim">20×15</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ═══════════════ RIGHT PANEL ═══════════════ -->
+        <div class="sidebar-right">
+            <div class="panel-tabs">
+                <div class="panel-tab active" onclick="switchTab('inspect', this)">Inspector</div>
+                <div class="panel-tab" onclick="switchTab('stats', this)">Stats</div>
+                <div class="panel-tab" onclick="switchTab('legend', this)">Legend</div>
+                <div class="panel-tab" onclick="switchTab('advice', this)">Tips</div>
+            </div>
+
+            <div class="panel-content">
+
+                <!-- TAB: Inspector -->
+                <div id="tab-inspect" class="page active">
+                    <!-- Default empty state -->
+                    <div id="page-default" class="page active">
+                        <div class="inspector-empty">
+                            <div class="inspector-empty-icon">⚒</div>
+                            <div class="inspector-empty-title">No Structure Selected</div>
+                            <div class="inspector-empty-desc">Click any building on the blueprint canvas or in the left
+                                sidebar to inspect its build specs, WorldEdit commands, and block palette.</div>
+                        </div>
+                    </div>
+
+                    <!-- LEADERBOARD -->
+                    <div id="page-leaderboard" class="page">
+                        <div class="panel-header">
+                            <div class="panel-zone-badge" style="background: var(--color-citadel); color: #0c0c14;">
+                                North Citadel</div>
+                            <div class="panel-title">Leaderboard Plaza</div>
+                            <div class="panel-subtitle">Grand entrance to the upper citadel courtyard</div>
+                        </div>
+                        <div class="spec-group">
+                            <div class="spec-group-title">Dimensions</div>
+                            <div class="spec-row"><span class="spec-key">Footprint</span><span class="spec-val">20 × 25
+                                    blocks</span></div>
+                            <div class="spec-row"><span class="spec-key">Area</span><span class="spec-val">500
+                                    blocks²</span></div>
+                            <div class="spec-row"><span class="spec-key">Max Height</span><span class="spec-val">~8
+                                    blocks (flat plaza)</span></div>
+                            <div class="spec-row"><span class="spec-key">Position</span><span class="spec-val">North
+                                    road terminal</span></div>
+                        </div>
+                        <div class="spec-group">
+                            <div class="spec-group-title">WorldEdit Setup</div>
+                            <div class="we-block">
+                                <div class="we-block-header">
+                                    <span class="we-block-label">Foundation Wireframe</span>
+                                    <button class="copy-btn"
+                                        onclick="copyWE(this, '//pos1\n//expand 20 north\n//expand 25 west\n//set orange_wool')">Copy</button>
+                                </div>
+                                <div class="we-code"><span class="cmd">//pos1</span> <span class="comment">← stand at SE
+                                        corner</span>
+                                    <span class="cmd">//expand 20 north</span>
+                                    <span class="cmd">//expand 25 west</span>
+                                    <span class="cmd">//set orange_wool</span> <span class="comment">← wireframe
+                                        marker</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="spec-group">
+                            <div class="spec-group-title">Block Palette</div>
+                            <div class="palette">
+                                <div class="palette-block">
+                                    <div class="palette-swatch" style="background: #8a8a8a;"></div>Polished Andesite
+                                </div>
+                                <div class="palette-block">
+                                    <div class="palette-swatch" style="background: #6a6a6a;"></div>Stone Bricks
+                                </div>
+                                <div class="palette-block">
+                                    <div class="palette-swatch" style="background: #3a3a3a;"></div>Deepslate Tiles
+                                </div>
+                                <div class="palette-block">
+                                    <div class="palette-swatch" style="background: #c9a868;"></div>Sandstone
+                                </div>
+                                <div class="palette-block">
+                                    <div class="palette-swatch" style="background: #4a6a3a;"></div>Moss Carpet
+                                </div>
+                            </div>
+                        </div>
+                        <div class="dev-note">Leaderboard NPCs go on polished andesite pedestals. Leave 3-block gaps
+                            between each stat hologram stand.</div>
+                        <div class="spec-row" style="border-bottom: none; margin: 10px 0;">
+                            <span class="spec-key">Coordinates:</span>
+                            <span class="coord-badge" onclick="copyCoords('-10, 30')">-10, 30 📋</span>
+                        </div>
+                        <div class="status-toggle" onclick="toggleBuildStatus('leaderboard', this)">
+                            <div class="status-toggle-check">✓</div>
+                            <span class="status-toggle-label">Mark as Built</span>
+                            <span class="status-toggle-hint">Click to toggle</span>
+                        </div>
+                    </div>
+
+                    <!-- TOP ISLAND -->
+                    <div id="page-topisland" class="page">
+                        <div class="panel-header">
+                            <div class="panel-zone-badge" style="background: var(--color-citadel); color: #0c0c14;">
+                                North Citadel</div>
+                            <div class="panel-title">Top Island Pedestal</div>
+                            <div class="panel-subtitle">Central monument of the progression sector</div>
+                        </div>
+                        <div class="spec-group">
+                            <div class="spec-group-title">Dimensions</div>
+                            <div class="spec-row"><span class="spec-key">Footprint</span><span class="spec-val">12 × 12
+                                    blocks</span></div>
+                            <div class="spec-row"><span class="spec-key">Area</span><span class="spec-val">144
+                                    blocks²</span></div>
+                            <div class="spec-row"><span class="spec-key">Max Height</span><span class="spec-val">~20
+                                    blocks (tall monument)</span></div>
+                            <div class="spec-row"><span class="spec-key">Position</span><span class="spec-val">NNW upper
+                                    courtyard</span></div>
+                        </div>
+                        <div class="spec-group">
+                            <div class="spec-group-title">WorldEdit Setup</div>
+                            <div class="we-block">
+                                <div class="we-block-header">
+                                    <span class="we-block-label">Pillar Foundation</span>
+                                    <button class="copy-btn"
+                                        onclick="copyWE(this, '//pos1\n//pos2\n//expand 20 up\n//set stone_bricks')">Copy</button>
+                                </div>
+                                <div class="we-code"><span class="cmd">//pos1</span> <span class="comment">← mark 12×12
+                                        base corners</span>
+                                    <span class="cmd">//pos2</span>
+                                    <span class="cmd">//expand 20 up</span>
+                                    <span class="cmd">//set stone_bricks</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="spec-group">
+                            <div class="spec-group-title">Block Palette</div>
+                            <div class="palette">
+                                <div class="palette-block">
+                                    <div class="palette-swatch" style="background: #c9c9c9;"></div>Quartz Block
+                                </div>
+                                <div class="palette-block">
+                                    <div class="palette-swatch" style="background: #5a5a5a;"></div>Stone Bricks
+                                </div>
+                                <div class="palette-block">
+                                    <div class="palette-swatch" style="background: #c9a868;"></div>Gold Block accent
+                                </div>
+                                <div class="palette-block">
+                                    <div class="palette-swatch" style="background: #3a8a5a;"></div>Prismarine
+                                </div>
+                            </div>
+                        </div>
+                        <div class="dev-note warning">This structure must tower over surrounding buildings. Keep it as
+                            the tallest point in the North Citadel quadrant.</div>
+                        <div class="spec-row" style="border-bottom: none; margin: 10px 0;">
+                            <span class="spec-key">Coordinates:</span>
+                            <span class="coord-badge" onclick="copyCoords('15, -40')">15, -40 📋</span>
+                        </div>
+                        <div class="status-toggle" onclick="toggleBuildStatus('topisland', this)">
+                            <div class="status-toggle-check">✓</div>
+                            <span class="status-toggle-label">Mark as Built</span>
+                            <span class="status-toggle-hint">Click to toggle</span>
+                        </div>
+                    </div>
+
+                    <!-- SKILLS ACADEMY -->
+                    <div id="page-skills" class="page">
+                        <div class="panel-header">
+                            <div class="panel-zone-badge" style="background: var(--color-citadel); color: #0c0c14;">
+                                North Citadel</div>
+                            <div class="panel-title">Skills Academy</div>
+                            <div class="panel-subtitle">Grand library with tall arched windows</div>
+                        </div>
+                        <div class="spec-group">
+                            <div class="spec-group-title">Dimensions</div>
+                            <div class="spec-row"><span class="spec-key">Footprint</span><span class="spec-val">18 × 18
+                                    blocks</span></div>
+                            <div class="spec-row"><span class="spec-key">Area</span><span class="spec-val">324
+                                    blocks²</span></div>
+                            <div class="spec-row"><span class="spec-key">Max Height</span><span class="spec-val">~16
+                                    blocks</span></div>
+                            <div class="spec-row"><span class="spec-key">Position</span><span class="spec-val">NW flank,
+                                    72 blks from N corner</span></div>
+                        </div>
+                        <div class="spec-group">
+                            <div class="spec-group-title">Block Palette</div>
+                            <div class="palette">
+                                <div class="palette-block">
+                                    <div class="palette-swatch" style="background: #6a4a2a;"></div>Dark Oak Planks
+                                </div>
+                                <div class="palette-block">
+                                    <div class="palette-swatch" style="background: #5a5a5a;"></div>Stone Bricks
+                                </div>
+                                <div class="palette-block">
+                                    <div class="palette-swatch" style="background: #8ac8e8;"></div>Light Blue Glass
+                                </div>
+                                <div class="palette-block">
+                                    <div class="palette-swatch" style="background: #2a2a2a;"></div>Deepslate Bricks
+                                </div>
+                                <div class="palette-block">
+                                    <div class="palette-swatch" style="background: #c8b89a;"></div>Birch Trapdoors
+                                </div>
+                            </div>
+                        </div>
+                        <div class="dev-note">Use glass panes (not full blocks) for the tall windows. Add bookshelf
+                            walls inside for the library feel. Lecterns with written books for NPC interaction.</div>
+                        <div class="status-toggle" onclick="toggleBuildStatus('skills', this)">
+                            <div class="status-toggle-check">✓</div>
+                            <span class="status-toggle-label">Mark as Built</span>
+                            <span class="status-toggle-hint">Click to toggle</span>
+                        </div>
+                    </div>
+
+                    <!-- DAILY QUESTS -->
+                    <div id="page-dailyquests" class="page">
+                        <div class="panel-header">
+                            <div class="panel-zone-badge" style="background: var(--color-citadel); color: #0c0c14;">
+                                North Citadel</div>
+                            <div class="panel-title">Daily Quests Tavern</div>
+                            <div class="panel-subtitle">Double-decker tavern with open-air patio</div>
+                        </div>
+                        <div class="spec-group">
+                            <div class="spec-group-title">Dimensions</div>
+                            <div class="spec-row"><span class="spec-key">Footprint</span><span class="spec-val">22 × 16
+                                    blocks</span></div>
+                            <div class="spec-row"><span class="spec-key">Area</span><span class="spec-val">352
+                                    blocks²</span></div>
+                            <div class="spec-row"><span class="spec-key">Max Height</span><span class="spec-val">~14
+                                    blocks</span></div>
+                            <div class="spec-row"><span class="spec-key">Position</span><span class="spec-val">NE far
+                                    flank</span></div>
+                        </div>
+                        <div class="spec-group">
+                            <div class="spec-group-title">Block Palette</div>
+                            <div class="palette">
+                                <div class="palette-block">
+                                    <div class="palette-swatch" style="background: #7a5a3a;"></div>Spruce Planks
+                                </div>
+                                <div class="palette-block">
+                                    <div class="palette-swatch" style="background: #4a3a2a;"></div>Spruce Log
+                                </div>
+                                <div class="palette-block">
+                                    <div class="palette-swatch" style="background: #5a5a5a;"></div>Cobblestone
+                                </div>
+                                <div class="palette-block">
+                                    <div class="palette-swatch" style="background: #8a4a2a;"></div>Terracotta
+                                </div>
+                                <div class="palette-block">
+                                    <div class="palette-swatch" style="background: #e8d8b8;"></div>Stripped Birch
+                                </div>
+                            </div>
+                        </div>
+                        <div class="dev-note">Build 2 floors: ground = main hall with quest NPCs, upper = open-air patio
+                            with fence railing. Add campfire smoke stacks on the roof for atmosphere.</div>
+                        <div class="status-toggle" onclick="toggleBuildStatus('dailyquests', this)">
+                            <div class="status-toggle-check">✓</div>
+                            <span class="status-toggle-label">Mark as Built</span>
+                            <span class="status-toggle-hint">Click to toggle</span>
+                        </div>
+                    </div>
+
+                    <!-- CRATES -->
+                    <div id="page-crates" class="page">
+                        <div class="panel-header">
+                            <div class="panel-zone-badge" style="background: var(--color-economy); color: #0c0c14;">East
+                                Economy</div>
+                            <div class="panel-title">Crates & GemShop Yard</div>
+                            <div class="panel-subtitle">Premium trade courtyard near spawn hub</div>
+                        </div>
+                        <div class="spec-group">
+                            <div class="spec-group-title">Dimensions</div>
+                            <div class="spec-row"><span class="spec-key">Footprint</span><span class="spec-val">24 × 18
+                                    blocks</span></div>
+                            <div class="spec-row"><span class="spec-key">Area</span><span class="spec-val">432
+                                    blocks²</span></div>
+                            <div class="spec-row"><span class="spec-key">Max Height</span><span class="spec-val">~10
+                                    blocks</span></div>
+                            <div class="spec-row"><span class="spec-key">Position</span><span class="spec-val">NE inner
+                                    junction wedge</span></div>
+                        </div>
+                        <div class="spec-group">
+                            <div class="spec-group-title">Block Palette</div>
+                            <div class="palette">
+                                <div class="palette-block">
+                                    <div class="palette-swatch" style="background: #c9a868;"></div>Barrel
+                                </div>
+                                <div class="palette-block">
+                                    <div class="palette-swatch" style="background: #6a5a4a;"></div>Spruce Planks
+                                </div>
+                                <div class="palette-block">
+                                    <div class="palette-swatch" style="background: #c9c980;"></div>Hay Bale
+                                </div>
+                                <div class="palette-block">
+                                    <div class="palette-swatch" style="background: #e8c848;"></div>Gold Block
+                                </div>
+                                <div class="palette-block">
+                                    <div class="palette-swatch" style="background: #5a8a5a;"></div>Emerald Block
+                                </div>
+                            </div>
+                        </div>
+                        <div class="dev-note">GemShop wagon attaches directly to front yard edge. Use armor stands with
+                            chest items for crate display previews. Add glowstone under carpet for ambient light.</div>
+                        <div class="status-toggle" onclick="toggleBuildStatus('crates', this)">
+                            <div class="status-toggle-check">✓</div>
+                            <span class="status-toggle-label">Mark as Built</span>
+                            <span class="status-toggle-hint">Click to toggle</span>
+                        </div>
+                    </div>
+
+                    <!-- SHOPS -->
+                    <div id="page-shops" class="page">
+                        <div class="panel-header">
+                            <div class="panel-zone-badge" style="background: var(--color-economy); color: #0c0c14;">East
+                                Economy</div>
+                            <div class="panel-title">Economic Shop Rows</div>
+                            <div class="panel-subtitle">3 interconnected medieval storefronts</div>
+                        </div>
+                        <div class="spec-group">
+                            <div class="spec-group-title">Dimensions</div>
+                            <div class="spec-row"><span class="spec-key">Footprint</span><span class="spec-val">36 × 14
+                                    blocks (total)</span></div>
+                            <div class="spec-row"><span class="spec-key">Per Shop</span><span class="spec-val">~12 × 14
+                                    blocks each</span></div>
+                            <div class="spec-row"><span class="spec-key">Area</span><span class="spec-val">504
+                                    blocks²</span></div>
+                            <div class="spec-row"><span class="spec-key">Max Height</span><span class="spec-val">~12
+                                    blocks</span></div>
+                            <div class="spec-row"><span class="spec-key">Position</span><span class="spec-val">East
+                                    inner lane</span></div>
+                        </div>
+                        <div class="spec-group">
+                            <div class="spec-group-title">Block Palette</div>
+                            <div class="palette">
+                                <div class="palette-block">
+                                    <div class="palette-swatch" style="background: #e85050;"></div>Red Wool (awning)
+                                </div>
+                                <div class="palette-block">
+                                    <div class="palette-swatch" style="background: #50a850;"></div>Green Wool (awning)
+                                </div>
+                                <div class="palette-block">
+                                    <div class="palette-swatch" style="background: #5080e8;"></div>Blue Wool (awning)
+                                </div>
+                                <div class="palette-block">
+                                    <div class="palette-swatch" style="background: #7a5a3a;"></div>Stripped Oak
+                                </div>
+                                <div class="palette-block">
+                                    <div class="palette-swatch" style="background: #c8b89a;"></div>Birch Planks
+                                </div>
+                            </div>
+                        </div>
+                        <div class="dev-note">Each storefront gets a unique colored wool awning. Use trapdoors as shelf
+                            displays. Item frames with goods on the walls. Share walls between shops to save space.
+                        </div>
+                        <div class="status-toggle" onclick="toggleBuildStatus('shops', this)">
+                            <div class="status-toggle-check">✓</div>
+                            <span class="status-toggle-label">Mark as Built</span>
+                            <span class="status-toggle-hint">Click to toggle</span>
+                        </div>
+                    </div>
+
+                    <!-- AUCTION HOUSE -->
+                    <div id="page-auction" class="page">
+                        <div class="panel-header">
+                            <div class="panel-zone-badge" style="background: var(--color-economy); color: #0c0c14;">East
+                                Economy</div>
+                            <div class="panel-title">Auction House Bank</div>
+                            <div class="panel-subtitle">Fortified masonry banking architecture</div>
+                        </div>
+                        <div class="spec-group">
+                            <div class="spec-group-title">Dimensions</div>
+                            <div class="spec-row"><span class="spec-key">Footprint</span><span class="spec-val">16 × 20
+                                    blocks</span></div>
+                            <div class="spec-row"><span class="spec-key">Area</span><span class="spec-val">320
+                                    blocks²</span></div>
+                            <div class="spec-row"><span class="spec-key">Max Height</span><span class="spec-val">~15
+                                    blocks</span></div>
+                            <div class="spec-row"><span class="spec-key">Position</span><span class="spec-val">East
+                                    outer border edge</span></div>
+                        </div>
+                        <div class="spec-group">
+                            <div class="spec-group-title">Block Palette</div>
+                            <div class="palette">
+                                <div class="palette-block">
+                                    <div class="palette-swatch" style="background: #5a5a5a;"></div>Stone Bricks
+                                </div>
+                                <div class="palette-block">
+                                    <div class="palette-swatch" style="background: #3a3a3a;"></div>Deepslate Bricks
+                                </div>
+                                <div class="palette-block">
+                                    <div class="palette-swatch" style="background: #2a2a2a;"></div>Blackstone
+                                </div>
+                                <div class="palette-block">
+                                    <div class="palette-swatch" style="background: #e8c848;"></div>Gold Block
+                                </div>
+                                <div class="palette-block">
+                                    <div class="palette-swatch" style="background: #4a3a2a;"></div>Dark Oak Planks
+                                </div>
+                            </div>
+                        </div>
+                        <div class="dev-note">Heavy stone exterior, thick walls. Interior vault room with iron bars.
+                            Gold block accents on pillars. Single grand entrance with iron doors.</div>
+                        <div class="status-toggle" onclick="toggleBuildStatus('auction', this)">
+                            <div class="status-toggle-check">✓</div>
+                            <span class="status-toggle-label">Mark as Built</span>
+                            <span class="status-toggle-hint">Click to toggle</span>
+                        </div>
+                    </div>
+
+                    <!-- ADVERTISING / RANKS -->
+                    <div id="page-advertising" class="page">
+                        <div class="panel-header">
+                            <div class="panel-zone-badge" style="background: var(--color-commons); color: #0c0c14;">
+                                South Commons</div>
+                            <div class="panel-title">Advertising Rank Stage</div>
+                            <div class="panel-subtitle">Town crier podium in high-traffic crossway</div>
+                        </div>
+                        <div class="spec-group">
+                            <div class="spec-group-title">Dimensions</div>
+                            <div class="spec-row"><span class="spec-key">Footprint</span><span class="spec-val">10 × 10
+                                    blocks</span></div>
+                            <div class="spec-row"><span class="spec-key">Area</span><span class="spec-val">100
+                                    blocks²</span></div>
+                            <div class="spec-row"><span class="spec-key">Max Height</span><span class="spec-val">~6
+                                    blocks (open-air)</span></div>
+                            <div class="spec-row"><span class="spec-key">Position</span><span class="spec-val">SE inner
+                                    corner crossway</span></div>
+                        </div>
+                        <div class="spec-group">
+                            <div class="spec-group-title">Block Palette</div>
+                            <div class="palette">
+                                <div class="palette-block">
+                                    <div class="palette-swatch" style="background: #8a8a8a;"></div>Smooth Stone
+                                </div>
+                                <div class="palette-block">
+                                    <div class="palette-swatch" style="background: #c9a868;"></div>Oak Planks
+                                </div>
+                                <div class="palette-block">
+                                    <div class="palette-swatch" style="background: #e85050;"></div>Red Banner
+                                </div>
+                                <div class="palette-block">
+                                    <div class="palette-swatch" style="background: #e8c848;"></div>Yellow Banner
+                                </div>
+                            </div>
+                        </div>
+                        <div class="dev-note">Raised platform 3 blocks up. Banner poles on each corner with rank-themed
+                            colors. Keep it open-air so it's visible from the road.</div>
+                        <div class="status-toggle" onclick="toggleBuildStatus('advertising', this)">
+                            <div class="status-toggle-check">✓</div>
+                            <span class="status-toggle-label">Mark as Built</span>
+                            <span class="status-toggle-hint">Click to toggle</span>
+                        </div>
+                    </div>
+
+                    <!-- DISCORD -->
+                    <div id="page-discord" class="page">
+                        <div class="panel-header">
+                            <div class="panel-zone-badge" style="background: var(--color-commons); color: #0c0c14;">
+                                South Commons</div>
+                            <div class="panel-title">Discord Community Hub</div>
+                            <div class="panel-subtitle">Spruce wood gazebo with hanging flower baskets</div>
+                        </div>
+                        <div class="spec-group">
+                            <div class="spec-group-title">Dimensions</div>
+                            <div class="spec-row"><span class="spec-key">Footprint</span><span class="spec-val">10 × 10
+                                    blocks (octagonal)</span></div>
+                            <div class="spec-row"><span class="spec-key">Area</span><span class="spec-val">~80
+                                    blocks²</span></div>
+                            <div class="spec-row"><span class="spec-key">Max Height</span><span class="spec-val">~8
+                                    blocks</span></div>
+                            <div class="spec-row"><span class="spec-key">Position</span><span class="spec-val">SE middle
+                                    track, behind Rank Stage</span></div>
+                        </div>
+                        <div class="spec-group">
+                            <div class="spec-group-title">Block Palette</div>
+                            <div class="palette">
+                                <div class="palette-block">
+                                    <div class="palette-swatch" style="background: #7a5a3a;"></div>Spruce Wood
+                                </div>
+                                <div class="palette-block">
+                                    <div class="palette-swatch" style="background: #5a8a5a;"></div>Leaf Blocks
+                                </div>
+                                <div class="palette-block">
+                                    <div class="palette-swatch" style="background: #e88080;"></div>Rose Bush
+                                </div>
+                                <div class="palette-block">
+                                    <div class="palette-swatch" style="background: #c8c8c8;"></div>Chains
+                                </div>
+                                <div class="palette-block">
+                                    <div class="palette-swatch" style="background: #e8e8a0;"></div>Lanterns
+                                </div>
+                            </div>
+                        </div>
+                        <div class="dev-note">Octagonal shape — clip the 4 corners of the 10×10 square. Hang flower pots
+                            from chains on the overhang. Discord link sign inside.</div>
+                        <div class="status-toggle" onclick="toggleBuildStatus('discord', this)">
+                            <div class="status-toggle-check">✓</div>
+                            <span class="status-toggle-label">Mark as Built</span>
+                            <span class="status-toggle-hint">Click to toggle</span>
+                        </div>
+                    </div>
+
+                    <!-- PVP -->
+                    <div id="page-pvp" class="page">
+                        <div class="panel-header">
+                            <div class="panel-zone-badge" style="background: var(--color-commons); color: #0c0c14;">
+                                South Commons</div>
+                            <div class="panel-title">PvP Teleport Barracks</div>
+                            <div class="panel-subtitle">Fortified military gatehouse outpost</div>
+                        </div>
+                        <div class="spec-group">
+                            <div class="spec-group-title">Dimensions</div>
+                            <div class="spec-row"><span class="spec-key">Footprint</span><span class="spec-val">14 × 16
+                                    blocks</span></div>
+                            <div class="spec-row"><span class="spec-key">Area</span><span class="spec-val">224
+                                    blocks²</span></div>
+                            <div class="spec-row"><span class="spec-key">Max Height</span><span class="spec-val">~18
+                                    blocks (tower)</span></div>
+                            <div class="spec-row"><span class="spec-key">Position</span><span class="spec-val">Far SE
+                                    outer corner</span></div>
+                        </div>
+                        <div class="spec-group">
+                            <div class="spec-group-title">Block Palette</div>
+                            <div class="palette">
+                                <div class="palette-block">
+                                    <div class="palette-swatch" style="background: #5a5a5a;"></div>Stone Bricks
+                                </div>
+                                <div class="palette-block">
+                                    <div class="palette-swatch" style="background: #3a3a3a;"></div>Cracked Stone
+                                </div>
+                                <div class="palette-block">
+                                    <div class="palette-swatch" style="background: #4a3a2a;"></div>Dark Oak
+                                </div>
+                                <div class="palette-block">
+                                    <div class="palette-swatch" style="background: #8a8a8a;"></div>Iron Bars
+                                </div>
+                                <div class="palette-block">
+                                    <div class="palette-swatch" style="background: #2a2a2a;"></div>Anvils
+                                </div>
+                            </div>
+                        </div>
+                        <div class="dev-note warning">Isolated at the far corner deliberately — prevents PvP traffic
+                            from clogging spawn. Add arrow slits (iron bars behind trapdoors) and spike walls (pointed
+                            fences).</div>
+                        <div class="status-toggle" onclick="toggleBuildStatus('pvp', this)">
+                            <div class="status-toggle-check">✓</div>
+                            <span class="status-toggle-label">Mark as Built</span>
+                            <span class="status-toggle-hint">Click to toggle</span>
+                        </div>
+                    </div>
+
+                    <!-- TRAINING -->
+                    <div id="page-training" class="page">
+                        <div class="panel-header">
+                            <div class="panel-zone-badge" style="background: var(--color-commons); color: #0c0c14;">
+                                South Commons</div>
+                            <div class="panel-title">Player XP Training Yard</div>
+                            <div class="panel-subtitle">Rustic fenced combat training compound</div>
+                        </div>
+                        <div class="spec-group">
+                            <div class="spec-group-title">Dimensions</div>
+                            <div class="spec-row"><span class="spec-key">Footprint</span><span class="spec-val">12 × 18
+                                    blocks</span></div>
+                            <div class="spec-row"><span class="spec-key">Area</span><span class="spec-val">216
+                                    blocks²</span></div>
+                            <div class="spec-row"><span class="spec-key">Max Height</span><span class="spec-val">~5
+                                    blocks (mostly ground)</span></div>
+                            <div class="spec-row"><span class="spec-key">Position</span><span class="spec-val">Attached
+                                    to PvP Barracks inner wing</span></div>
+                        </div>
+                        <div class="spec-group">
+                            <div class="spec-group-title">Block Palette</div>
+                            <div class="palette">
+                                <div class="palette-block">
+                                    <div class="palette-swatch" style="background: #8a7a5a;"></div>Coarse Dirt
+                                </div>
+                                <div class="palette-block">
+                                    <div class="palette-swatch" style="background: #c9a868;"></div>Oak Fence
+                                </div>
+                                <div class="palette-block">
+                                    <div class="palette-swatch" style="background: #c8b89a;"></div>Hay Bale targets
+                                </div>
+                                <div class="palette-block">
+                                    <div class="palette-swatch" style="background: #5a4a3a;"></div>Armor Stand
+                                </div>
+                            </div>
+                        </div>
+                        <div class="dev-note">Ground level mostly — coarse dirt floor with oak fence perimeter. Scatter
+                            hay bale targets and armor stands with leather gear. Add a weapon rack using item frames on
+                            oak wood.</div>
+                        <div class="status-toggle" onclick="toggleBuildStatus('training', this)">
+                            <div class="status-toggle-check">✓</div>
+                            <span class="status-toggle-label">Mark as Built</span>
+                            <span class="status-toggle-hint">Click to toggle</span>
+                        </div>
+                    </div>
+
+                    <!-- AFK PARK -->
+                    <div id="page-afk" class="page">
+                        <div class="panel-header">
+                            <div class="panel-zone-badge" style="background: var(--color-commons); color: #0c0c14;">
+                                South Commons</div>
+                            <div class="panel-title">AFK Fountain Park</div>
+                            <div class="panel-subtitle">Circular garden with layered fountain</div>
+                        </div>
+                        <div class="spec-group">
+                            <div class="spec-group-title">Dimensions</div>
+                            <div class="spec-row"><span class="spec-key">Shape</span><span class="spec-val">Circle, 30
+                                    block diameter</span></div>
+                            <div class="spec-row"><span class="spec-key">Area</span><span class="spec-val">~707
+                                    blocks²</span></div>
+                            <div class="spec-row"><span class="spec-key">Max Height</span><span class="spec-val">~6
+                                    blocks (fountain peak)</span></div>
+                            <div class="spec-row"><span class="spec-key">Position</span><span class="spec-val">South
+                                    road terminal</span></div>
+                        </div>
+                        <div class="spec-group">
+                            <div class="spec-group-title">WorldEdit Setup</div>
+                            <div class="we-block">
+                                <div class="we-block-header">
+                                    <span class="we-block-label">Circle Foundation</span>
+                                    <button class="copy-btn"
+                                        onclick="copyWE(this, '//cyl light_blue_wool 15 1\n//rotate 90\n//rotate 90\n//rotate 90')">Copy</button>
+                                </div>
+                                <div class="we-code"><span class="cmd">//cyl light_blue_wool 15 1</span> <span
+                                        class="comment">← base circle</span>
+                                    <span class="comment">/* Build 1/4 of assets, then: */</span>
+                                    <span class="cmd">//rotate 90</span> <span class="comment">← repeat 3× to fill
+                                        circle</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="spec-group">
+                            <div class="spec-group-title">Block Palette</div>
+                            <div class="palette">
+                                <div class="palette-block">
+                                    <div class="palette-swatch" style="background: #8ac8e8;"></div>Light Blue Wool
+                                </div>
+                                <div class="palette-block">
+                                    <div class="palette-swatch" style="background: #c8c8c8;"></div>Quartz Slab
+                                </div>
+                                <div class="palette-block">
+                                    <div class="palette-swatch" style="background: #5a8a5a;"></div>Leaf Blocks
+                                </div>
+                                <div class="palette-block">
+                                    <div class="palette-swatch" style="background: #4a8a4a;"></div>Grass Block
+                                </div>
+                                <div class="palette-block">
+                                    <div class="palette-swatch" style="background: #4848e8;"></div>Water
+                                </div>
+                                <div class="palette-block">
+                                    <div class="palette-swatch" style="background: #5a9a5a;"></div>Custom Willow Tree
+                                </div>
+                            </div>
+                        </div>
+                        <div class="dev-note">Dense tree line perimeter to isolate AFK area from ambient sounds. Layered
+                            fountain in center: 3 tiers with water flowing down. Benches under custom willow trees (oak
+                            leaves + vines).</div>
+                        <div class="status-toggle" onclick="toggleBuildStatus('afk', this)">
+                            <div class="status-toggle-check">✓</div>
+                            <span class="status-toggle-label">Mark as Built</span>
+                            <span class="status-toggle-hint">Click to toggle</span>
+                        </div>
+                    </div>
+
+                    <!-- WARPS -->
+                    <div id="page-warps" class="page">
+                        <div class="panel-header">
+                            <div class="panel-zone-badge" style="background: var(--color-mystic); color: #0c0c14;">West
+                                Mystic</div>
+                            <div class="panel-title">Playerwarps Shrine</div>
+                            <div class="panel-subtitle">Runic pillar archway with magical accents</div>
+                        </div>
+                        <div class="spec-group">
+                            <div class="spec-group-title">Dimensions</div>
+                            <div class="spec-row"><span class="spec-key">Footprint</span><span class="spec-val">6 × 6
+                                    blocks</span></div>
+                            <div class="spec-row"><span class="spec-key">Area</span><span class="spec-val">36
+                                    blocks²</span></div>
+                            <div class="spec-row"><span class="spec-key">Max Height</span><span class="spec-val">~8
+                                    blocks</span></div>
+                            <div class="spec-row"><span class="spec-key">Position</span><span class="spec-val">West
+                                    inner road offset, near spawn</span></div>
+                        </div>
+                        <div class="spec-group">
+                            <div class="spec-group-title">Block Palette</div>
+                            <div class="palette">
+                                <div class="palette-block">
+                                    <div class="palette-swatch" style="background: #5a5a5a;"></div>Stone Bricks
+                                </div>
+                                <div class="palette-block">
+                                    <div class="palette-swatch" style="background: #8a5aa8;"></div>Purple Stained Glass
+                                </div>
+                                <div class="palette-block">
+                                    <div class="palette-swatch" style="background: #4ac8c8;"></div>End Rod
+                                </div>
+                                <div class="palette-block">
+                                    <div class="palette-swatch" style="background: #e8e8a0;"></div>Sea Lantern
+                                </div>
+                            </div>
+                        </div>
+                        <div class="dev-note">Small but detailed. 4 stone pillars with end rods on top. Purple glass
+                            panes forming an archway. Sea lantern or beacon in center for the warp interaction point.
+                        </div>
+                        <div class="status-toggle" onclick="toggleBuildStatus('warps', this)">
+                            <div class="status-toggle-check">✓</div>
+                            <span class="status-toggle-label">Mark as Built</span>
+                            <span class="status-toggle-hint">Click to toggle</span>
+                        </div>
+                    </div>
+
+                    <!-- ONEBLOCK -->
+                    <div id="page-oneblock" class="page">
+                        <div class="panel-header">
+                            <div class="panel-zone-badge" style="background: var(--color-mystic); color: #0c0c14;">West
+                                Mystic</div>
+                            <div class="panel-title">OneBlock Teleport Portal</div>
+                            <div class="panel-subtitle">Massive terrain feature with portal vortex</div>
+                        </div>
+                        <div class="spec-group">
+                            <div class="spec-group-title">Dimensions</div>
+                            <div class="spec-row"><span class="spec-key">Footprint</span><span class="spec-val">16 × 8
+                                    blocks</span></div>
+                            <div class="spec-row"><span class="spec-key">Area</span><span class="spec-val">128
+                                    blocks²</span></div>
+                            <div class="spec-row"><span class="spec-key">Max Height</span><span class="spec-val">~12
+                                    blocks (hill peak)</span></div>
+                            <div class="spec-row"><span class="spec-key">Position</span><span class="spec-val">West
+                                    outer boundary terminal</span></div>
+                        </div>
+                        <div class="spec-group">
+                            <div class="spec-group-title">WorldEdit Terrain</div>
+                            <div class="we-block">
+                                <div class="we-block-header">
+                                    <span class="we-block-label">Sand Brush & Smooth</span>
+                                    <button class="copy-btn"
+                                        onclick="copyWE(this, '//br sphere sand 4\n//replacenear 20 sand dirt')">Copy</button>
+                                </div>
+                                <div class="we-code"><span class="cmd">//br sphere sand 4</span> <span class="comment">←
+                                        stack up terrain mounds</span>
+                                    <span class="cmd">//replacenear 20 sand dirt</span> <span class="comment">← smooth
+                                        terrain</span>
+                                    <span class="comment">/* Then paint with //br sphere grass_block 3 */</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="spec-group">
+                            <div class="spec-group-title">Block Palette</div>
+                            <div class="palette">
+                                <div class="palette-block">
+                                    <div class="palette-swatch" style="background: #5a7a4a;"></div>Grass Block
+                                </div>
+                                <div class="palette-block">
+                                    <div class="palette-swatch" style="background: #6a5a3a;"></div>Dirt / Coarse Dirt
+                                </div>
+                                <div class="palette-block">
+                                    <div class="palette-swatch" style="background: #5a5a5a;"></div>Stone
+                                </div>
+                                <div class="palette-block">
+                                    <div class="palette-swatch" style="background: #8a4ac8;"></div>Nether Portal
+                                </div>
+                                <div class="palette-block">
+                                    <div class="palette-swatch" style="background: #2a2a2a;"></div>Obsidian frame
+                                </div>
+                            </div>
+                        </div>
+                        <div class="dev-note">Build terrain first with WE brushes, then carve the crescent hill shape
+                            manually. Portal vortex at the peak — use obsidian frame with nether portal blocks. Add
+                            custom vegetation with bone meal after terrain is shaped.</div>
+                        <div class="status-toggle" onclick="toggleBuildStatus('oneblock', this)">
+                            <div class="status-toggle-check">✓</div>
+                            <span class="status-toggle-label">Mark as Built</span>
+                            <span class="status-toggle-hint">Click to toggle</span>
+                        </div>
+                    </div>
+
+                    <!-- WIZARD TOWER -->
+                    <div id="page-wizard" class="page">
+                        <div class="panel-header">
+                            <div class="panel-zone-badge" style="background: var(--color-mystic); color: #0c0c14;">West
+                                Mystic</div>
+                            <div class="panel-title">Mage Powers Tower</div>
+                            <div class="panel-subtitle">Crooked wizard tower with crystalline fixtures</div>
+                        </div>
+                        <div class="spec-group">
+                            <div class="spec-group-title">Dimensions</div>
+                            <div class="spec-row"><span class="spec-key">Footprint</span><span class="spec-val">12 × 12
+                                    blocks (cylindrical)</span></div>
+                            <div class="spec-row"><span class="spec-key">Area</span><span class="spec-val">~113
+                                    blocks²</span></div>
+                            <div class="spec-row"><span class="spec-key">Max Height</span><span class="spec-val">28
+                                    blocks (tallest West)</span></div>
+                            <div class="spec-row"><span class="spec-key">Position</span><span class="spec-val">WNW ridge
+                                    slope, ~68 blks out</span></div>
+                        </div>
+                        <div class="spec-group">
+                            <div class="spec-group-title">WorldEdit Setup</div>
+                            <div class="we-block">
+                                <div class="we-block-header">
+                                    <span class="we-block-label">Corner Pillars</span>
+                                    <button class="copy-btn"
+                                        onclick="copyWE(this, '//pos1\n//pos2\n//expand 28 up\n//set stone_bricks')">Copy</button>
+                                </div>
+                                <div class="we-code"><span class="comment">/* Mark 12×12 base, then: */</span>
+                                    <span class="cmd">//expand 28 up</span>
+                                    <span class="cmd">//set stone_bricks</span> <span class="comment">← corner layout
+                                        pillars</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="spec-group">
+                            <div class="spec-group-title">Block Palette</div>
+                            <div class="palette">
+                                <div class="palette-block">
+                                    <div class="palette-swatch" style="background: #5a5a5a;"></div>Stone Bricks
+                                </div>
+                                <div class="palette-block">
+                                    <div class="palette-swatch" style="background: #3a3a3a;"></div>Mossy Stone Bricks
+                                </div>
+                                <div class="palette-block">
+                                    <div class="palette-swatch" style="background: #c858a8;"></div>Magenta Terracotta
+                                </div>
+                                <div class="palette-block">
+                                    <div class="palette-swatch" style="background: #7a3a9a;"></div>Purple Wool (roof)
+                                </div>
+                                <div class="palette-block">
+                                    <div class="palette-swatch" style="background: #4ac8c8;"></div>End Rod
+                                </div>
+                                <div class="palette-block">
+                                    <div class="palette-swatch" style="background: #88c8e8;"></div>Amethyst Cluster
+                                </div>
+                            </div>
+                        </div>
+                        <div class="dev-note warning">28 blocks tall = tallest structure in West Mystic. Build circular
+                            base, taper upward with each floor slightly offset for the "crooked" look. Steep magenta
+                            roof with floating amethyst crystals and end rods around the peak.</div>
+                        <div class="status-toggle" onclick="toggleBuildStatus('wizard', this)">
+                            <div class="status-toggle-check">✓</div>
+                            <span class="status-toggle-label">Mark as Built</span>
+                            <span class="status-toggle-hint">Click to toggle</span>
+                        </div>
+                    </div>
+
+                    <!-- RESOURCE DOCKS -->
+                    <div id="page-resource" class="page">
+                        <div class="panel-header">
+                            <div class="panel-zone-badge" style="background: var(--color-mystic); color: #0c0c14;">West
+                                Mystic</div>
+                            <div class="panel-title">Resource Camp & Docks</div>
+                            <div class="panel-subtitle">Rustic lumber camp and shipping harbor</div>
+                        </div>
+                        <div class="spec-group">
+                            <div class="spec-group-title">Dimensions</div>
+                            <div class="spec-row"><span class="spec-key">Footprint</span><span class="spec-val">20 × 15
+                                    blocks</span></div>
+                            <div class="spec-row"><span class="spec-key">Area</span><span class="spec-val">300
+                                    blocks²</span></div>
+                            <div class="spec-row"><span class="spec-key">Max Height</span><span class="spec-val">~10
+                                    blocks (crane arm)</span></div>
+                            <div class="spec-row"><span class="spec-key">Position</span><span class="spec-val">Far SW
+                                    outer corner</span></div>
+                        </div>
+                        <div class="spec-group">
+                            <div class="spec-group-title">Block Palette</div>
+                            <div class="palette">
+                                <div class="palette-block">
+                                    <div class="palette-swatch" style="background: #7a5a3a;"></div>Spruce Planks
+                                </div>
+                                <div class="palette-block">
+                                    <div class="palette-swatch" style="background: #4a3a2a;"></div>Spruce Log (raw)
+                                </div>
+                                <div class="palette-block">
+                                    <div class="palette-swatch" style="background: #c9a868;"></div>Oak Log Piles
+                                </div>
+                                <div class="palette-block">
+                                    <div class="palette-swatch" style="background: #4848e8;"></div>Water
+                                </div>
+                                <div class="palette-block">
+                                    <div class="palette-swatch" style="background: #c8c8c8;"></div>Chain (crane)
+                                </div>
+                                <div class="palette-block">
+                                    <div class="palette-swatch" style="background: #5a5a5a;"></div>Cobblestone wall
+                                </div>
+                            </div>
+                        </div>
+                        <div class="dev-note">Split into 2 zones: lumber camp (left) with log stacks and sawmill table,
+                            docks (right) with water channel, crane arms from fence + chains, and a small rowboat.</div>
+                        <div class="status-toggle" onclick="toggleBuildStatus('resource', this)">
+                            <div class="status-toggle-check">✓</div>
+                            <span class="status-toggle-label">Mark as Built</span>
+                            <span class="status-toggle-hint">Click to toggle</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TAB: Stats -->
+                <div id="tab-stats" class="page">
+                    <div style="padding: 16px;">
+                        <div class="stats-grid">
+                            <div class="stat-card">
+                                <div class="stat-card-label">Total Area</div>
+                                <div class="stat-card-value" id="stat-area">0</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-card-label">Avg Height</div>
+                                <div class="stat-card-value" id="stat-avg-height">0</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-card-label">Max Height</div>
+                                <div class="stat-card-value" id="stat-max-height">0</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-card-label">Footprint Density</div>
+                                <div class="stat-card-value" id="stat-density">0%</div>
+                            </div>
+                        </div>
+
+                        <div class="height-chart">
+                            <div class="height-chart-title">Building Heights</div>
+                            <div class="height-bars" id="height-bars"></div>
+                        </div>
+
+                        <div class="export-section">
+                            <button class="export-btn" onclick="exportState()">↓ Export</button>
+                            <button class="import-btn" onclick="document.getElementById('import-file').click()">↑
+                                Import</button>
+                            <input type="file" id="import-file" accept=".json" onchange="importState(event)">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TAB: Legend -->
+                <div id="tab-legend" class="page">
+                    <div class="spec-group">
+                        <div class="spec-group-title">District Zones</div>
+                        <div class="legend-grid">
+                            <div class="legend-item">
+                                <div class="legend-color" style="background: var(--color-citadel);"></div>
+                                <div class="legend-text">North Citadel<small>Upper progression tier</small></div>
+                            </div>
+                            <div class="legend-item">
+                                <div class="legend-color" style="background: var(--color-economy);"></div>
+                                <div class="legend-text">East Economy<small>Trade & commerce</small></div>
+                            </div>
+                            <div class="legend-item">
+                                <div class="legend-color" style="background: var(--color-commons);"></div>
+                                <div class="legend-text">South Commons<small>Community & combat</small></div>
+                            </div>
+                            <div class="legend-item">
+                                <div class="legend-color" style="background: var(--color-mystic);"></div>
+                                <div class="legend-text">West Mystic<small>Magic & portals</small></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="spec-group">
+                        <div class="spec-group-title">Map Elements</div>
+                        <div class="legend-grid">
+                            <div class="legend-item">
+                                <div class="legend-color" style="background: var(--color-spawn); border-radius: 50%;">
+                                </div>
+                                <div class="legend-text">Spawn Core<small>0,0 center point</small></div>
+                            </div>
+                            <div class="legend-item">
+                                <div class="legend-color" style="background: var(--road-border);"></div>
+                                <div class="legend-text">Highways<small>7-block wide roads</small></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="spec-group">
+                        <div class="spec-group-title">Scale Reference</div>
+                        <div class="spec-row"><span class="spec-key">1 pixel</span><span class="spec-val">= 0.2
+                                blocks</span></div>
+                        <div class="spec-row"><span class="spec-key">5 pixels</span><span class="spec-val">= 1
+                                block</span></div>
+                        <div class="spec-row"><span class="spec-key">25px grid</span><span class="spec-val">= 5
+                                blocks</span></div>
+                        <div class="spec-row"><span class="spec-key">50px grid</span><span class="spec-val">= 10
+                                blocks</span></div>
+                        <div class="spec-row"><span class="spec-key">750px total</span><span class="spec-val">= 150
+                                blocks</span></div>
+                    </div>
+
+                    <div class="spec-group">
+                        <div class="spec-group-title">Keyboard Shortcuts</div>
+                        <div class="shortcut-list">
+                            <div class="shortcut-row">
+                                <span class="shortcut-key"><kbd>Z</kbd></span>
+                                <span class="shortcut-desc">Toggle zone overlays</span>
+                            </div>
+                            <div class="shortcut-row">
+                                <span class="shortcut-key"><kbd>G</kbd></span>
+                                <span class="shortcut-desc">Toggle grid visibility</span>
+                            </div>
+                            <div class="shortcut-row">
+                                <span class="shortcut-key"><kbd>D</kbd></span>
+                                <span class="shortcut-desc">Hide completed builds</span>
+                            </div>
+                            <div class="shortcut-row">
+                                <span class="shortcut-key"><kbd>Esc</kbd></span>
+                                <span class="shortcut-desc">Deselect building</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TAB: Medieval Tips -->
+                <div id="tab-advice" class="page">
+                    <div class="advice-section">
+                        <div class="spec-group">
+                            <div class="spec-group-title">Layout Analysis</div>
+                        </div>
+
+                        <div class="advice-card">
+                            <div class="advice-card-title">
+                                <span class="advice-tag"
+                                    style="background: var(--color-success); color: #0c0c14;">Good</span>
+                                4-Quadrant Zoning System
+                            </div>
+                            <div class="advice-card-body">
+                                Separating by function (progression, economy, community, magic) is a strong
+                                organizational pattern that real medieval towns used — keep it. Players intuitively
+                                learn which direction to walk.
+                            </div>
+                        </div>
+
+                        <div class="advice-card">
+                            <div class="advice-card-title">
+                                <span class="advice-tag"
+                                    style="background: var(--color-success); color: #0c0c14;">Good</span>
+                                Spawn Core + Highway Cross
+                            </div>
+                            <div class="advice-card-body">
+                                The crossroads pattern is historically accurate for medieval town centers. The 30-block
+                                spawn circle acts as a roundabout plaza — excellent for player distribution.
+                            </div>
+                        </div>
+
+                        <div class="advice-card">
+                            <div class="advice-card-title">
+                                <span class="advice-tag"
+                                    style="background: var(--color-warning); color: #0c0c14;">Consider</span>
+                                Add Secondary Paths
+                            </div>
+                            <div class="advice-card-body">
+                                Real medieval villages had winding side alleys branching off main roads. Consider adding
+                                3-block-wide cobblestone paths connecting nearby buildings within each quadrant to make
+                                exploration feel more organic.
+                            </div>
+                        </div>
+
+                        <div class="advice-card">
+                            <div class="advice-card-title">
+                                <span class="advice-tag"
+                                    style="background: var(--color-warning); color: #0c0c14;">Consider</span>
+                                Fill Dead Space with Decor
+                            </div>
+                            <div class="advice-card-body">
+                                The gaps between buildings can feel empty. Scatter small props: market carts, well
+                                pumps, flower beds, lamp posts, hay stacks, and hitching posts. These 1-3 block details
+                                make a massive difference.
+                            </div>
+                        </div>
+
+                        <div class="advice-card">
+                            <div class="advice-card-title">
+                                <span class="advice-tag"
+                                    style="background: var(--color-warning); color: #0c0c14;">Consider</span>
+                                Terrain Elevation Changes
+                            </div>
+                            <div class="advice-card-body">
+                                Flat spawn areas feel artificial. Consider raising the North Citadel quadrant 3-5 blocks
+                                higher (it's the "upper" progression area) and stepping down toward South Commons. This
+                                adds visual hierarchy and medieval castle hill vibes.
+                            </div>
+                        </div>
+
+                        <div class="advice-card">
+                            <div class="advice-card-title">
+                                <span class="advice-tag"
+                                    style="background: var(--color-info); color: #0c0c14;">Tip</span>
+                                Medieval Block Palette Rules
+                            </div>
+                            <div class="advice-card-body">
+                                Stick to these material families: <strong>Stone</strong> (stone bricks, cobblestone,
+                                andesite) for foundations, <strong>Wood</strong> (spruce, dark oak, stripped logs) for
+                                upper floors, <strong>Terracotta/Wool</strong> for accent roofs. Avoid modern blocks
+                                like concrete or prismarine in the main village.
+                            </div>
+                        </div>
+
+                        <div class="advice-card">
+                            <div class="advice-card-title">
+                                <span class="advice-tag"
+                                    style="background: var(--color-info); color: #0c0c14;">Tip</span>
+                                Height Variation Strategy
+                            </div>
+                            <div class="advice-card-body">
+                                Create a skyline: Mage Tower (28) > Top Island (20) > PvP Barracks (18) > Academy (16) >
+                                Tavern (14) > others. Never make two adjacent buildings the same height — staggered
+                                rooflines look far more authentic.
+                            </div>
+                        </div>
+
+                        <div class="advice-card">
+                            <div class="advice-card-title">
+                                <span class="advice-tag"
+                                    style="background: var(--color-info); color: #0c0c14;">Tip</span>
+                                Depth & Detail Layers
+                            </div>
+                            <div class="advice-card-body">
+                                Every wall needs at least 2 layers of depth. Use stairs, slabs, and trapdoors to break
+                                up flat surfaces. Add window boxes (trapdoor + flower pot), timber framing (stripped
+                                logs), and support beam details (fences as pillars).
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══════════════ ADD BUILDING MODAL ═══════════════ -->
+    <div class="modal-overlay" id="add-building-modal" onclick="closeAddBuildingModal(event)">
+        <div class="modal-dialog" onclick="event.stopPropagation()">
+            <div class="modal-header">
+                <h2 class="modal-title">Add Custom Building</h2>
+                <button class="modal-close" onclick="closeAddBuildingModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label">Building Name</label>
+                    <input type="text" class="form-input" id="input-name" placeholder="e.g., My Trading Post">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Zone</label>
+                    <select class="form-select" id="input-zone">
+                        <option value="citadel">North Citadel</option>
+                        <option value="economy">East Economy</option>
+                        <option value="commons">South Commons</option>
+                        <option value="mystic">West Mystic</option>
+                    </select>
+                </div>
+                <div class="form-group-row">
+                    <div class="form-group">
+                        <label class="form-label">Width (blocks)</label>
+                        <input type="number" class="form-input" id="input-width" placeholder="12" min="1" max="50"
+                            value="12">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Depth (blocks)</label>
+                        <input type="number" class="form-input" id="input-depth" placeholder="12" min="1" max="50"
+                            value="12">
+                    </div>
+                </div>
+                <div class="form-group-row">
+                    <div class="form-group">
+                        <label class="form-label">Height (blocks)</label>
+                        <input type="number" class="form-input" id="input-height" placeholder="12" min="1" max="50"
+                            value="12">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Area (calculated)</label>
+                        <input type="number" class="form-input" id="input-area" placeholder="144" min="1" readonly>
+                    </div>
+                </div>
+                <div class="form-group-row">
+                    <div class="form-group">
+                        <label class="form-label">X Coordinate</label>
+                        <input type="number" class="form-input" id="input-x" placeholder="0" min="-75" max="75"
+                            value="0">
+                        <div class="form-hint">-75 (West) to 75 (East)</div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Z Coordinate</label>
+                        <input type="number" class="form-input" id="input-z" placeholder="0" min="-75" max="75"
+                            value="0">
+                        <div class="form-hint">-75 (North) to 75 (South)</div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" onclick="closeAddBuildingModal()">Cancel</button>
+                <button class="btn-primary" onclick="saveCustomBuilding()">Add Building</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══════════════ SCRIPTS ═══════════════ -->
     <script>
-        function openPage(pageId) {
-            // Find and hide all dynamic page element layers
-            const pages = document.querySelectorAll('.page');
-            pages.forEach(p => p.classList.remove('active'));
-            
-            // Show selected asset page details target matrix
-            const activePage = document.getElementById('page-' + pageId);
-            if(activePage) {
-                activePage.classList.add('active');
+        // ─── State ───
+        const buildState = {};
+        let currentBuilding = null;
+        let zonesVisible = true;
+        let gridVisible = true;
+        let hideDone = false;
+
+        // ─── Building ID to element ID mapping ───
+        const buildingMap = {
+            'leaderboard': 'b-leaderboard',
+            'topisland': 'b-topisland',
+            'skills': 'b-skills',
+            'dailyquests': 'b-dailyquests',
+            'crates': 'b-crates',
+            'shops': 'b-shops',
+            'auction': 'b-auction',
+            'advertising': 'b-advertising',
+            'discord': 'b-discord',
+            'pvp': 'b-pvpbarracks',
+            'training': 'b-trainingyard',
+            'afk': 'b-afkpark',
+            'warps': 'b-playerwarps',
+            'oneblock': 'b-oneblock',
+            'wizard': 'b-wizardtower',
+            'resource': 'b-resource'
+        };
+
+        // ─── Load saved state ───
+        function loadState() {
+            try {
+                const saved = localStorage.getItem('spawnBuilderState');
+                if (saved) {
+                    const parsed = JSON.parse(saved);
+                    Object.assign(buildState, parsed);
+                    // Apply loaded states
+                    for (const [id, done] of Object.entries(buildState)) {
+                        if (done) applyBuildDone(id, true);
+                    }
+                    updateProgress();
+                }
+            } catch (e) { }
+        }
+
+        function saveState() {
+            try {
+                localStorage.setItem('spawnBuilderState', JSON.stringify(buildState));
+            } catch (e) { }
+        }
+
+        // ─── Select Building ───
+        function selectBuilding(id) {
+            // Clear previous selection
+            document.querySelectorAll('.building').forEach(b => b.classList.remove('selected'));
+            document.querySelectorAll('.build-item').forEach(b => b.classList.remove('active'));
+
+            // Show the inspect tab
+            switchTab('inspect', document.querySelector('.panel-tab'));
+
+            // Hide all pages
+            document.querySelectorAll('#tab-inspect .page').forEach(p => p.classList.remove('active'));
+
+            // Show selected page
+            const page = document.getElementById('page-' + id);
+            if (page) {
+                page.classList.add('active');
+            }
+
+            // Highlight building on canvas
+            const bEl = document.getElementById(buildingMap[id]);
+            if (bEl) bEl.classList.add('selected');
+
+            // Highlight in sidebar
+            const sideItem = document.querySelector(`.build-item[data-id="${id}"]`);
+            if (sideItem) sideItem.classList.add('active');
+
+            currentBuilding = id;
+        }
+
+        // ─── Deselect ───
+        function deselectBuilding() {
+            document.querySelectorAll('.building').forEach(b => b.classList.remove('selected'));
+            document.querySelectorAll('.build-item').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('#tab-inspect .page').forEach(p => p.classList.remove('active'));
+            document.getElementById('page-default').classList.add('active');
+            currentBuilding = null;
+        }
+
+        // ─── Toggle Build Status ───
+        function toggleBuildStatus(id, toggleEl) {
+            const isDone = !buildState[id];
+            buildState[id] = isDone;
+            applyBuildDone(id, isDone);
+
+            if (toggleEl) {
+                toggleEl.classList.toggle('done', isDone);
+            }
+
+            updateProgress();
+            saveState();
+        }
+
+        function applyBuildDone(id, done) {
+            // Update canvas building
+            const bEl = document.getElementById(buildingMap[id]);
+            if (bEl) bEl.classList.toggle('build-done', done);
+
+            // Update sidebar item
+            const sideItem = document.querySelector(`.build-item[data-id="${id}"]`);
+            if (sideItem) sideItem.classList.toggle('completed', done);
+
+            // Update toggle in panel
+            const page = document.getElementById('page-' + id);
+            if (page) {
+                const toggle = page.querySelector('.status-toggle');
+                if (toggle) toggle.classList.toggle('done', done);
             }
         }
+
+        // ─── Progress ───
+        function updateProgress() {
+            const total = Object.keys(buildingMap).length;
+            const done = Object.values(buildState).filter(v => v).length;
+            const pct = Math.round((done / total) * 100);
+
+            document.getElementById('stats-done').textContent = done;
+            document.getElementById('progress-pct').textContent = pct + '%';
+            document.getElementById('progress-fill').style.width = pct + '%';
+        }
+
+        // ─── Tab Switching ───
+        function switchTab(tabId, el) {
+            document.querySelectorAll('.panel-tab').forEach(t => t.classList.remove('active'));
+            el.classList.add('active');
+
+            document.querySelectorAll('.panel-content > .page').forEach(p => p.classList.remove('active'));
+            document.getElementById('tab-' + tabId).classList.add('active');
+        }
+
+        // ─── Copy WorldEdit ───
+        function copyWE(btn, text) {
+            navigator.clipboard.writeText(text).then(() => {
+                btn.textContent = 'Copied!';
+                btn.classList.add('copied');
+                setTimeout(() => {
+                    btn.textContent = 'Copy';
+                    btn.classList.remove('copied');
+                }, 2000);
+            }).catch(() => {
+                btn.textContent = 'Failed';
+                setTimeout(() => btn.textContent = 'Copy', 2000);
+            });
+        }
+
+        // ─── Canvas Coordinate Tracking ───
+        function updateCoords(e) {
+            const canvas = document.getElementById('canvas');
+            const rect = canvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+
+            // Convert to block coordinates (750px = 150 blocks, center = 0,0)
+            const blockX = Math.round((x / 750) * 150 - 75);
+            const blockZ = Math.round((y / 750) * 150 - 75);
+
+            document.getElementById('cursor-coords').textContent =
+                `X: ${blockX}  Z: ${blockZ}  (px: ${Math.round(x)}, ${Math.round(y)})`;
+        }
+
+        function clearCoords() {
+            document.getElementById('cursor-coords').textContent = 'Hover canvas for coords';
+        }
+
+        // ─── Toggle Controls ───
+        function toggleZones(btn) {
+            zonesVisible = !zonesVisible;
+            btn.classList.toggle('active', zonesVisible);
+            document.querySelectorAll('.quadrant').forEach(q => {
+                q.style.display = zonesVisible ? 'block' : 'none';
+            });
+        }
+
+        function toggleGrid(btn) {
+            gridVisible = !gridVisible;
+            btn.classList.toggle('active', gridVisible);
+            const canvas = document.getElementById('canvas');
+            canvas.style.setProperty('--grid-line', gridVisible ? '#1a1a2a' : 'transparent');
+            canvas.style.setProperty('--grid-line-major', gridVisible ? '#252540' : 'transparent');
+        }
+
+        function toggleDone(btn) {
+            hideDone = !hideDone;
+            btn.classList.toggle('active', hideDone);
+            document.querySelectorAll('.building.build-done').forEach(b => {
+                b.style.display = hideDone ? 'none' : '';
+            });
+        }
+
+        // ─── Generate Axis Ticks ───
+        function generateAxes() {
+            const axisX = document.getElementById('axis-x');
+            const axisY = document.getElementById('axis-y');
+
+            for (let i = 0; i <= 150; i += 10) {
+                const px = (i / 150) * 750;
+                const blockVal = i - 75;
+
+                const tickX = document.createElement('div');
+                tickX.className = 'axis-tick';
+                tickX.style.left = px + 'px';
+                tickX.style.bottom = '0';
+                tickX.textContent = blockVal;
+                axisX.appendChild(tickX);
+
+                const tickY = document.createElement('div');
+                tickY.className = 'axis-tick';
+                tickY.style.top = px + 'px';
+                tickY.style.right = '0';
+                tickY.textContent = blockVal;
+                axisY.appendChild(tickY);
+            }
+        }
+
+        // ─── Keyboard Shortcuts ───
+        document.addEventListener('keydown', (e) => {
+            if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+
+            switch (e.key.toLowerCase()) {
+                case 'z':
+                    toggleZones(document.getElementById('btn-zones'));
+                    break;
+                case 'g':
+                    toggleGrid(document.getElementById('btn-grid'));
+                    break;
+                case 'd':
+                    toggleDone(document.getElementById('btn-done'));
+                    break;
+                case 'escape':
+                    deselectBuilding();
+                    break;
+            }
+        });
+
+        // ═════════════════════════════════════════════
+        // BUILDING DATA (Heights, Areas, Zones)
+        // ═════════════════════════════════════════════
+        const buildingData = {
+            'leaderboard': { height: 8, area: 500, zone: 'citadel' },
+            'topisland': { height: 20, area: 144, zone: 'citadel' },
+            'skills': { height: 16, area: 324, zone: 'citadel' },
+            'dailyquests': { height: 14, area: 352, zone: 'citadel' },
+            'crates': { height: 10, area: 432, zone: 'economy' },
+            'shops': { height: 12, area: 504, zone: 'economy' },
+            'auction': { height: 15, area: 320, zone: 'economy' },
+            'advertising': { height: 6, area: 100, zone: 'commons' },
+            'discord': { height: 8, area: 80, zone: 'commons' },
+            'pvp': { height: 18, area: 224, zone: 'commons' },
+            'training': { height: 5, area: 216, zone: 'commons' },
+            'afk': { height: 6, area: 707, zone: 'commons' },
+            'warps': { height: 8, area: 36, zone: 'mystic' },
+            'oneblock': { height: 12, area: 128, zone: 'mystic' },
+            'wizard': { height: 28, area: 113, zone: 'mystic' },
+            'resource': { height: 10, area: 300, zone: 'mystic' }
+        };
+
+        // ═════════════════════════════════════════════
+        // SEARCH & FILTER FUNCTIONS
+        // ═════════════════════════════════════════════
+        let currentZoneFilter = 'all';
+
+        function filterBuildings() {
+            const searchText = document.getElementById('search-input').value.toLowerCase();
+            const items = document.querySelectorAll('.build-item');
+            items.forEach(item => {
+                const itemZone = item.getAttribute('data-zone');
+                const itemText = item.textContent.toLowerCase();
+                const matchesSearch = itemText.includes(searchText);
+                const matchesZone = currentZoneFilter === 'all' || itemZone === currentZoneFilter;
+                item.classList.toggle('hidden', !matchesSearch || !matchesZone);
+            });
+        }
+
+        function filterByZone(zone) {
+            currentZoneFilter = zone;
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.getAttribute('data-zone') === zone);
+            });
+            filterBuildings();
+        }
+
+        // ═════════════════════════════════════════════
+        // BULK ACTIONS
+        // ═════════════════════════════════════════════
+        function markAllComplete() {
+            for (const id of Object.keys(buildingMap)) {
+                if (!buildState[id]) {
+                    buildState[id] = true;
+                    applyBuildDone(id, true);
+                }
+            }
+            updateProgress();
+            saveState();
+        }
+
+        function clearAllComplete() {
+            for (const id of Object.keys(buildingMap)) {
+                buildState[id] = false;
+                applyBuildDone(id, false);
+            }
+            updateProgress();
+            saveState();
+        }
+
+        // ═════════════════════════════════════════════
+        // THEME TOGGLE
+        // ═════════════════════════════════════════════
+        function initThemeToggle() {
+            const toggle = document.getElementById('theme-toggle');
+            const isDark = localStorage.getItem('theme') !== 'light';
+            toggle.innerHTML = isDark ? '<span class="theme-toggle-dot">🌙</span>' : '<span class="theme-toggle-dot">☀️</span>';
+            if (!isDark) document.body.classList.add('light-theme');
+            toggle.classList.toggle('light', !isDark);
+            toggle.addEventListener('click', () => {
+                document.body.classList.toggle('light-theme');
+                toggle.classList.toggle('light');
+                const isLight = document.body.classList.contains('light-theme');
+                toggle.innerHTML = isLight ? '<span class="theme-toggle-dot">☀️</span>' : '<span class="theme-toggle-dot">🌙</span>';
+                localStorage.setItem('theme', isLight ? 'light' : 'dark');
+            });
+        }
+
+        // ═════════════════════════════════════════════
+        // STATS GENERATION
+        // ═════════════════════════════════════════════
+        function updateStats() {
+            const buildings = Object.values(buildingData);
+            const totalArea = buildings.reduce((sum, b) => sum + b.area, 0);
+            const avgHeight = Math.round(buildings.reduce((sum, b) => sum + b.height, 0) / buildings.length);
+            const maxHeight = Math.max(...buildings.map(b => b.height));
+            const density = Math.round((totalArea / (150 * 150)) * 100);
+
+            document.getElementById('stat-area').textContent = totalArea + ' blocks²';
+            document.getElementById('stat-avg-height').textContent = avgHeight + ' blks';
+            document.getElementById('stat-max-height').textContent = maxHeight + ' blks';
+            document.getElementById('stat-density').textContent = density + '%';
+
+            // Build height bars
+            const barsContainer = document.getElementById('height-bars');
+            barsContainer.innerHTML = '';
+            const heights = Object.entries(buildingData);
+            heights.forEach(([id, data]) => {
+                const bar = document.createElement('div');
+                bar.className = 'height-bar';
+                bar.style.height = (data.height / maxHeight * 100) + '%';
+                const label = buildingMap[id]?.replace('b-', '').replace(/-/g, ' ') || id;
+                bar.innerHTML = `<div class="height-bar-label">${label}</div>`;
+                bar.title = `${data.height} blocks`;
+                barsContainer.appendChild(bar);
+            });
+        }
+
+        // ═════════════════════════════════════════════
+        // EXPORT / IMPORT
+        // ═════════════════════════════════════════════
+        function exportState() {
+            const data = {
+                timestamp: new Date().toISOString(),
+                buildState: buildState
+            };
+            const json = JSON.stringify(data, null, 2);
+            const blob = new Blob([json], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `spawn-builder-${Date.now()}.json`;
+            link.click();
+            URL.revokeObjectURL(url);
+        }
+
+        function importState(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    buildState = data.buildState || {};
+                    for (const [id, done] of Object.entries(buildState)) {
+                        applyBuildDone(id, done);
+                    }
+                    updateProgress();
+                    saveState();
+                    alert('Build state imported successfully!');
+                } catch (err) {
+                    alert('Failed to import: ' + err.message);
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        // ═════════════════════════════════════════════
+        // COPY COORDINATES
+        // ═════════════════════════════════════════════
+        function copyCoords(coords) {
+            navigator.clipboard.writeText(coords).then(() => {
+                alert('Coordinates copied: ' + coords);
+            }).catch(() => {
+                alert('Failed to copy');
+            });
+        }
+
+        // ═════════════════════════════════════════════
+        // CUSTOM BUILDINGS
+        // ═════════════════════════════════════════════
+        let customBuildings = {};
+
+        function loadCustomBuildings() {
+            try {
+                const saved = localStorage.getItem('customBuildings');
+                if (saved) {
+                    customBuildings = JSON.parse(saved);
+                    renderCustomBuildings();
+                }
+            } catch (e) { }
+        }
+
+        function saveCustomBuildings() {
+            try {
+                localStorage.setItem('customBuildings', JSON.stringify(customBuildings));
+            } catch (e) { }
+        }
+
+        function openAddBuildingModal() {
+            document.getElementById('add-building-modal').classList.add('active');
+            const widthInput = document.getElementById('input-width');
+            const depthInput = document.getElementById('input-depth');
+            const areaInput = document.getElementById('input-area');
+            const updateArea = () => {
+                const area = parseInt(widthInput.value) * parseInt(depthInput.value);
+                areaInput.value = isNaN(area) ? '' : area;
+            };
+            widthInput.oninput = updateArea;
+            depthInput.oninput = updateArea;
+            updateArea();
+        }
+
+        function closeAddBuildingModal(event) {
+            if (event && event.target !== document.getElementById('add-building-modal')) return;
+            document.getElementById('add-building-modal').classList.remove('active');
+        }
+
+        function saveCustomBuilding() {
+            const name = document.getElementById('input-name').value.trim();
+            const zone = document.getElementById('input-zone').value;
+            const width = parseInt(document.getElementById('input-width').value);
+            const depth = parseInt(document.getElementById('input-depth').value);
+            const height = parseInt(document.getElementById('input-height').value);
+            const area = width * depth;
+            const x = parseInt(document.getElementById('input-x').value);
+            const z = parseInt(document.getElementById('input-z').value);
+
+            if (!name) {
+                alert('Please enter a building name');
+                return;
+            }
+
+            const id = 'custom_' + Date.now();
+            customBuildings[id] = { name, zone, width, depth, height, area, x, z };
+            buildingData[id] = { height: height, area: area, zone: zone };
+
+            saveCustomBuildings();
+            closeAddBuildingModal();
+            renderCustomBuildings();
+            updateStats();
+            alert(`Building "${name}" added successfully!`);
+        }
+
+        function renderCustomBuildings() {
+            const sidebar = document.querySelector('.sidebar-left');
+            const existingCustom = sidebar.querySelectorAll('.build-item[data-custom="true"]');
+            existingCustom.forEach(item => item.remove());
+
+            const customCanvas = document.querySelectorAll('#canvas [data-custom="true"]');
+            customCanvas.forEach(item => item.remove());
+
+            if (Object.keys(customBuildings).length === 0) return;
+
+            let customSection = sidebar.querySelector('.sidebar-section-title[data-custom="true"]');
+            if (!customSection) {
+                customSection = document.createElement('div');
+                customSection.className = 'sidebar-section-title';
+                customSection.setAttribute('data-custom', 'true');
+                customSection.textContent = 'Custom Builds';
+                sidebar.appendChild(customSection);
+            }
+
+            const canvas = document.getElementById('canvas');
+            for (const [id, data] of Object.entries(customBuildings)) {
+                const item = document.createElement('div');
+                item.className = 'build-item';
+                item.setAttribute('data-id', id);
+                item.setAttribute('data-zone', data.zone);
+                item.setAttribute('data-custom', 'true');
+                item.innerHTML = `
+                    <div class="build-checkbox">✓</div>
+                    <div class="build-item-dot" style="background: var(--color-${data.zone});"></div>
+                    <span class="build-item-name">${data.name}</span>
+                    <span class="build-item-dim">${data.width}×${data.depth}</span>
+                `;
+                item.onclick = () => selectBuilding(id);
+                sidebar.appendChild(item);
+
+                const pxWidth = (data.width / 150) * 750;
+                const pxHeight = (data.depth / 150) * 750;
+                const pxX = ((data.x + 75) / 150) * 750;
+                const pxZ = ((data.z + 75) / 150) * 750;
+
+                const buildingEl = document.createElement('div');
+                buildingEl.id = id;
+                buildingEl.setAttribute('data-custom', 'true');
+                buildingEl.className = `building ${data.zone}`;
+                buildingEl.style.width = pxWidth + 'px';
+                buildingEl.style.height = pxHeight + 'px';
+                buildingEl.style.left = pxX + 'px';
+                buildingEl.style.top = pxZ + 'px';
+                buildingEl.style.transform = 'translate(-50%, -50%)';
+                buildingEl.innerHTML = `
+                    <div class="b-title">${data.name}</div>
+                    <div class="b-dim">${data.width}×${data.depth}</div>
+                `;
+                buildingEl.onclick = () => selectBuilding(id);
+                canvas.appendChild(buildingEl);
+            }
+        }
+
+        // ─── Init ───
+        generateAxes();
+        loadState();
+        loadCustomBuildings();
+        initThemeToggle();
+        updateStats();
     </script>
 </body>
+
 </html>

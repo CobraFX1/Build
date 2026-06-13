@@ -74,11 +74,12 @@
 
         .canvas-container {
             position: relative;
-            width: 750px; /* 1 block = 5px scaling */
+            width: 750px;
             height: 750px;
             background-color: var(--bg-panel);
             border: 3px dashed #45475a;
             box-shadow: 0 0 30px rgba(0,0,0,0.7);
+            flex-shrink: 0;
         }
 
         /* Architectural Grid Mesh overlay */
@@ -90,9 +91,10 @@
             background-image: 
                 linear-gradient(to right, var(--grid-line) 1px, transparent 1px),
                 linear-gradient(to bottom, var(--grid-line) 1px, transparent 1px);
-            background-size: 50px 50px; /* Represents 10x10 block intervals */
+            background-size: 50px 50px;
             opacity: 0.4;
             pointer-events: none;
+            z-index: 0;
         }
 
         /* Highway Infrastructure system */
@@ -100,9 +102,10 @@
             position: absolute;
             background-color: var(--road-bg);
             box-sizing: border-box;
+            z-index: 1;
         }
         .hw-ns {
-            width: 35px; /* 7 blocks wide */
+            width: 35px;
             height: 100%;
             left: 50%;
             transform: translateX(-50%);
@@ -111,7 +114,7 @@
         }
         .hw-ew {
             width: 100%;
-            height: 35px; /* 7 blocks wide */
+            height: 35px;
             top: 50%;
             transform: translateY(-50%);
             border-top: 1px dotted var(--road-border);
@@ -121,7 +124,7 @@
         /* Spawn Core Axis */
         .spawn-core {
             position: absolute;
-            width: 150px; /* 30 block diameter circle boundary */
+            width: 150px;
             height: 150px;
             left: 50%;
             top: 50%;
@@ -158,10 +161,15 @@
             box-shadow: 0 4px 10px rgba(0,0,0,0.4);
             cursor: pointer;
             transition: transform 0.2s, background-color 0.2s;
+            z-index: 3;
         }
         .building:hover {
             transform: scale(1.05);
             background-color: #313244;
+            z-index: 20;
+        }
+        /* Override hover transform for rotated buildings */
+        .building.rotated:hover {
             z-index: 20;
         }
         .b-title {
@@ -180,28 +188,124 @@
         .citadel { border: 1px solid var(--color-citadel); color: var(--color-citadel); }
         .economy { border: 1px solid var(--color-economy); color: var(--color-economy); }
         .commons { border: 1px solid var(--color-commons); color: var(--color-commons); }
-        .mystic { border: 1px solid var(--color-mystic); color: var(--color-mystic); }
+        .mystic  { border: 1px solid var(--color-mystic);  color: var(--color-mystic);  }
 
-        /* Precise Footprint Vectors (Scaled down explicitly to fit 750px canvas) */
-        #b-leaderboard { top: 90px; left: 50%; transform: translateX(-50%); width: 100px; height: 125px; } /* 20x25 */
-        #b-topisland    { top: 20px; left: 42%; width: 60px; height: 60px; } /* 12x12 */
-        #b-skills       { top: 40px; left: 40px; width: 90px; height: 90px; } /* 18x18 */
-        #b-dailyquests  { top: 40px; right: 40px; width: 110px; height: 80px; } /* 22x16 */
+        /* ═══════════════════════════════════════════════
+           BUILDING FOOTPRINT POSITIONS
+           Mapped to match the reference layout image.
+           Canvas: 750x750px  |  1 block ≈ 5px
+           ═══════════════════════════════════════════════ */
 
-        #b-crates       { top: 220px; right: 210px; width: 120px; height: 90px; } /* 24x18 */
-        #b-shops        { top: 450px; right: 100px; width: 180px; height: 70px; } /* 36x14 overall */
-        #b-auction      { top: 370px; right: 40px; width: 80px; height: 100px; } /* 16x20 */
+        /* ── NW QUADRANT ── */
+        #b-afkpark {
+            top: 40px; left: 30px;
+            width: 175px; height: 175px;
+            border-radius: 50%;
+        }
+        #b-wizardtower {
+            top: 60px; left: 260px;
+            width: 60px; height: 60px;
+        }
 
-        #b-advertising  { bottom: 220px; right: 220px; width: 50px; height: 50px; } /* 10x10 */
-        #b-discord      { bottom: 160px; right: 160px; width: 50px; height: 50px; } /* 10x10 */
-        #b-pvpbarracks  { bottom: 40px; right: 40px; width: 70px; height: 80px; } /* 14x16 */
-        #b-trainingyard { bottom: 140px; left: 210px; width: 60px; height: 90px; } /* 12x18 */
-        #b-afkpark      { bottom: 40px; left: 50%; transform: translateX(-50%); width: 150px; height: 150px; border-radius: 50%; } /* 30x30 circle */
+        /* ── NE QUADRANT ── */
+        #b-leaderboard {
+            top: 90px; left: 385px;
+            width: 100px; height: 120px;
+        }
+        #b-dailysystems {
+            top: 100px; right: 25px;
+            width: 110px; height: 80px;
+            transform: rotate(-12deg);
+        }
+        #b-dailysystems:hover {
+            transform: rotate(-12deg) scale(1.05);
+        }
+        #b-crates {
+            top: 230px; right: 150px;
+            width: 120px; height: 75px;
+        }
 
-        #b-playerwarps  { top: 310px; left: 210px; width: 30px; height: 30px; } /* 6x6 */
-        #b-oneblock     { top: 200px; left: 30px; width: 80px; height: 40px; } /* 16x8 */
-        #b-wizardtower  { top: 130px; left: 140px; width: 60px; height: 60px; } /* 12x12 */
-        #b-resource     { bottom: 40px; left: 40px; width: 100px; height: 75px; } /* 20x15 */
+        /* ── WEST SIDE ── */
+        #b-oneblock {
+            top: 310px; left: 25px;
+            width: 80px; height: 50px;
+        }
+        #b-playerwarps {
+            top: 270px; left: 285px;
+            width: 30px; height: 30px;
+        }
+
+        /* ── EAST SIDE ── */
+        #b-shops {
+            top: 315px; right: 25px;
+            width: 130px; height: 80px;
+        }
+        #b-auction {
+            bottom: 170px; right: 40px;
+            width: 85px; height: 65px;
+        }
+
+        /* ── SW QUADRANT ── */
+        #b-topisland {
+            bottom: 180px; left: 90px;
+            width: 60px; height: 60px;
+        }
+        #b-trainingyard {
+            bottom: 20px; left: 120px;
+            width: 110px; height: 120px;
+            transform: rotate(-8deg);
+        }
+        #b-trainingyard:hover {
+            transform: rotate(-8deg) scale(1.05);
+        }
+
+        /* ── SE QUADRANT ── */
+        #b-pvpbarracks {
+            bottom: 40px; right: 55px;
+            width: 70px; height: 80px;
+        }
+        #b-skills {
+            bottom: 40px; left: 365px;
+            width: 90px; height: 80px;
+        }
+
+        /* ── SMALL UTILITY BUILDINGS ── */
+        #b-advertising {
+            bottom: 155px; right: 185px;
+            width: 45px; height: 45px;
+        }
+        #b-discord {
+            bottom: 110px; right: 135px;
+            width: 45px; height: 45px;
+        }
+
+        /* ── RESOURCE NODE (Factory) ── SW corner */
+        #b-resource {
+            bottom: 30px; left: 20px;
+            width: 100px; height: 80px;
+        }
+
+        /* ═══════════════════════════════════════════════
+           NEW AREAS
+           ═══════════════════════════════════════════════ */
+
+        /* Upgrades / Perks Area - NW area below AFK park */
+        #b-upgrades {
+            top: 240px; left: 40px;
+            width: 95px; height: 65px;
+        }
+
+        /* Spawner Area - West, below OneBlock */
+        #b-spawners {
+            top: 400px; left: 30px;
+            width: 90px; height: 65px;
+        }
+
+        /* Generators Area - East economy, between shops and auction */
+        #b-generators {
+            bottom: 100px; right: 175px;
+            width: 100px; height: 65px;
+        }
 
         /* Perimeter Labels */
         .border-tag {
@@ -210,11 +314,12 @@
             color: var(--text-muted);
             background-color: var(--bg-dark);
             padding: 2px 6px;
+            z-index: 2;
         }
-        .tag-top { top: -10px; left: 50%; transform: translateX(-50%); }
-        .tag-right { right: -35px; top: 50%; transform: translateY(-50%) rotate(90deg); }
+        .tag-top    { top: -10px; left: 50%; transform: translateX(-50%); }
+        .tag-right  { right: -35px; top: 50%; transform: translateY(-50%) rotate(90deg); }
         .tag-bottom { bottom: -10px; left: 50%; transform: translateX(-50%); }
-        .tag-left { left: -30px; top: 50%; transform: translateY(-50%) rotate(-90deg); }
+        .tag-left   { left: -30px; top: 50%; transform: translateY(-50%) rotate(-90deg); }
 
         /* SIDE PANEL PAGES */
         .inspect-panel {
@@ -226,6 +331,8 @@
             box-shadow: 0 4px 20px rgba(0,0,0,0.5);
             box-sizing: border-box;
             min-height: 450px;
+            max-height: 750px;
+            overflow-y: auto;
         }
 
         .panel-header {
@@ -269,6 +376,23 @@
             border-left: 3px solid #45475a;
         }
 
+        .npc-list {
+            list-style: none;
+            padding: 0;
+            margin: 8px 0 0 0;
+        }
+        .npc-list li {
+            padding: 5px 8px;
+            background: var(--bg-card);
+            border-left: 3px solid #45475a;
+            margin-bottom: 4px;
+            font-size: 0.75rem;
+            color: var(--text-main);
+        }
+        .npc-list li strong {
+            color: var(--color-spawn);
+        }
+
         .btn-back {
             display: block;
             width: 100%;
@@ -310,61 +434,81 @@
                 <div class="spawn-label">SPAWN CORE</div>
             </div>
 
-            <div id="b-leaderboard" class="building citadel" onclick="openPage('leaderboard')">
-                <div class="b-title">Leaderboards</div><div class="b-dim">20x25</div>
-            </div>
-            <div id="b-topisland" class="building citadel" onclick="openPage('topisland')">
-                <div class="b-title">Top Island</div><div class="b-dim">12x12</div>
-            </div>
-            <div id="b-skills" class="building citadel" onclick="openPage('skills')">
-                <div class="b-title">Skills Acad.</div><div class="b-dim">18x18</div>
-            </div>
-            <div id="b-dailyquests" class="building citadel" onclick="openPage('dailyquests')">
-                <div class="b-title">Quests Tavern</div><div class="b-dim">22x16</div>
-            </div>
-
-            <div id="b-crates" class="building economy" onclick="openPage('crates')">
-                <div class="b-title">Crates Yard</div><div class="b-dim">24x18</div>
-            </div>
-            <div id="b-shops" class="building economy" onclick="openPage('shops')">
-                <div class="b-title">Shop Rows</div><div class="b-dim">36x14</div>
-            </div>
-            <div id="b-auction" class="building economy" onclick="openPage('auction')">
-                <div class="b-title">Auction House</div><div class="b-dim">16x20</div>
-            </div>
-
-            <div id="b-advertising" class="building commons" onclick="openPage('advertising')">
-                <div class="b-title">Ranks</div><div class="b-dim">10x10</div>
-            </div>
-            <div id="b-discord" class="building commons" onclick="openPage('discord')">
-                <div class="b-title">Discord</div><div class="b-dim">10x10</div>
-            </div>
-            <div id="b-pvpbarracks" class="building commons" onclick="openPage('pvp')">
-                <div class="b-title">PvP Barracks</div><div class="b-dim">14x16</div>
-            </div>
-            <div id="b-trainingyard" class="building commons" onclick="openPage('training')">
-                <div class="b-title">XP Yard</div><div class="b-dim">12x18</div>
-            </div>
+            <!-- ═══ NW QUADRANT ═══ -->
             <div id="b-afkpark" class="building commons" onclick="openPage('afk')">
                 <div class="b-title">AFK Fountain Park</div><div class="b-dim">30x30 Cir.</div>
-            </div>
-
-            <div id="b-playerwarps" class="building mystic" onclick="openPage('warps')">
-                <div class="b-title">Warps</div><div class="b-dim">6x6</div>
-            </div>
-            <div id="b-oneblock" class="building mystic" onclick="openPage('oneblock')">
-                <div class="b-title">OneBlock Portal</div><div class="b-dim">16x8</div>
             </div>
             <div id="b-wizardtower" class="building mystic" onclick="openPage('wizard')">
                 <div class="b-title">Mage Tower</div><div class="b-dim">12x12</div>
             </div>
+
+            <!-- ═══ NE QUADRANT ═══ -->
+            <div id="b-leaderboard" class="building citadel" onclick="openPage('leaderboard')">
+                <div class="b-title">Leaderboards</div><div class="b-dim">20x25</div>
+            </div>
+            <div id="b-dailysystems" class="building citadel rotated" onclick="openPage('dailysystems')">
+                <div class="b-title">Quests Tavern</div><div class="b-dim">22x16</div>
+            </div>
+            <div id="b-crates" class="building economy" onclick="openPage('crates')">
+                <div class="b-title">Crates Yard</div><div class="b-dim">24x18</div>
+            </div>
+
+            <!-- ═══ WEST SIDE ═══ -->
+            <div id="b-oneblock" class="building mystic" onclick="openPage('oneblock')">
+                <div class="b-title">OneBlock</div><div class="b-dim">16x8</div>
+            </div>
+            <div id="b-playerwarps" class="building mystic" onclick="openPage('warps')">
+                <div class="b-title">Exit</div><div class="b-dim">6x6</div>
+            </div>
+            <div id="b-upgrades" class="building citadel" onclick="openPage('upgrades')">
+                <div class="b-title">Upgrades / Perks</div><div class="b-dim">19x13</div>
+            </div>
+            <div id="b-spawners" class="building mystic" onclick="openPage('spawners')">
+                <div class="b-title">Spawner Area</div><div class="b-dim">18x13</div>
+            </div>
+
+            <!-- ═══ EAST SIDE ═══ -->
+            <div id="b-shops" class="building economy" onclick="openPage('shops')">
+                <div class="b-title">Shop Town</div><div class="b-dim">26x16</div>
+            </div>
+            <div id="b-auction" class="building commons" onclick="openPage('auction')">
+                <div class="b-title">Auction House</div><div class="b-dim">17x13</div>
+            </div>
+            <div id="b-generators" class="building economy" onclick="openPage('generators')">
+                <div class="b-title">Generators</div><div class="b-dim">20x13</div>
+            </div>
+
+            <!-- ═══ SW QUADRANT ═══ -->
+            <div id="b-topisland" class="building citadel" onclick="openPage('topisland')">
+                <div class="b-title">Top Is.</div><div class="b-dim">12x12</div>
+            </div>
+            <div id="b-trainingyard" class="building commons rotated" onclick="openPage('training')">
+                <div class="b-title">XP Yard</div><div class="b-dim">12x18</div>
+            </div>
             <div id="b-resource" class="building mystic" onclick="openPage('resource')">
-                <div class="b-title">Res. Docks</div><div class="b-dim">20x15</div>
+                <div class="b-title">Resource Node</div><div class="b-dim">20x16</div>
+            </div>
+
+            <!-- ═══ SE QUADRANT ═══ -->
+            <div id="b-skills" class="building citadel" onclick="openPage('skills')">
+                <div class="b-title">Skills Area</div><div class="b-dim">18x16</div>
+            </div>
+            <div id="b-pvpbarracks" class="building commons" onclick="openPage('pvp')">
+                <div class="b-title">PvP Barracks</div><div class="b-dim">14x16</div>
+            </div>
+
+            <!-- ═══ SMALL UTILITY ═══ -->
+            <div id="b-advertising" class="building commons" onclick="openPage('advertising')">
+                <div class="b-title">Ranks</div><div class="b-dim">9x9</div>
+            </div>
+            <div id="b-discord" class="building commons" onclick="openPage('discord')">
+                <div class="b-title">Disc.</div><div class="b-dim">9x9</div>
             </div>
         </div>
 
         <div class="inspect-panel">
             
+            <!-- ═══ DEFAULT PAGE ═══ -->
             <div id="page-default" class="page active">
                 <div class="panel-header">
                     <div class="panel-title">Overview Panel</div>
@@ -372,8 +516,15 @@
                 <p style="font-size: 0.75rem; color: var(--text-muted); line-height: 1.4;">
                     Click any structural footprint within the 150x150 layout window to fetch exact zone dimensions, placement parameters, and theme descriptions.
                 </p>
+                <div style="margin-top: 20px; font-size: 0.7rem; color: var(--text-muted);">
+                    <div style="margin-bottom: 6px;"><span style="color: var(--color-citadel);">■</span> North Citadel Arc</div>
+                    <div style="margin-bottom: 6px;"><span style="color: var(--color-economy);">■</span> East Economy</div>
+                    <div style="margin-bottom: 6px;"><span style="color: var(--color-commons);">■</span> South Commons</div>
+                    <div style="margin-bottom: 6px;"><span style="color: var(--color-mystic);">■</span> West Mystic Wing</div>
+                </div>
             </div>
 
+            <!-- ═══ LEADERBOARD ═══ -->
             <div id="page-leaderboard" class="page">
                 <div class="panel-header">
                     <div class="panel-zone-badge" style="background-color: var(--color-citadel); color: #11111b;">North Citadel</div>
@@ -384,6 +535,7 @@
                 <div class="spec-row"><div class="spec-label">Design Theme</div><div class="spec-value">A flat, polished stone courtyard plaza designed to host global server metric holos.</div></div>
             </div>
 
+            <!-- ═══ TOP ISLAND ═══ -->
             <div id="page-topisland" class="page">
                 <div class="panel-header">
                     <div class="panel-zone-badge" style="background-color: var(--color-citadel); color: #11111b;">North Citadel</div>
@@ -394,26 +546,40 @@
                 <div class="spec-row"><div class="spec-label">Design Theme</div><div class="spec-value">A prominent vertical monument structure that anchors the center point of the high-end progression sector.</div></div>
             </div>
 
+            <!-- ═══ SKILLS AREA (updated) ═══ -->
             <div id="page-skills" class="page">
                 <div class="panel-header">
                     <div class="panel-zone-badge" style="background-color: var(--color-citadel); color: #11111b;">North Citadel</div>
-                    <div class="panel-title">Skills Academy</div>
+                    <div class="panel-title">Skills Area</div>
                 </div>
-                <div class="spec-row"><div class="spec-label">Footprint Dimensions</div><div class="spec-value">18 Blocks x 18 Blocks Base</div></div>
-                <div class="spec-row"><div class="spec-label">Zoning & Spacing</div><div class="spec-value">Anchors the far Northwest corner of the upper progression tier, sitting 72 blocks down from the northern boundary corner.</div></div>
-                <div class="spec-row"><div class="spec-label">Design Theme</div><div class="spec-value">Grand medieval library architecture featuring high arched roofs and vertical glass accents.</div></div>
+                <div class="spec-row"><div class="spec-label">Footprint Dimensions</div><div class="spec-value">18 Blocks x 16 Blocks Base</div></div>
+                <div class="spec-row"><div class="spec-label">Zoning & Spacing</div><div class="spec-value">Anchors the southern commons sector near the center highway, grouping all skill progression hubs in one accessible location.</div></div>
+                <div class="spec-row"><div class="spec-label">Design Theme</div><div class="spec-value">A grand medieval guild hall with three distinct wings for each skill discipline, connected by an open-air cobblestone courtyard.</div></div>
+                <div class="spec-row"><div class="spec-label">Skill Stations</div></div>
+                <ul class="npc-list">
+                    <li><strong>⛏ Mining</strong> — Ore extraction skill tree, progression tiers, and mine entrance portal.</li>
+                    <li><strong>🌾 Farming</strong> — Crop cultivation skill tree, harvest tiers, and greenhouse portal.</li>
+                    <li><strong>⚔ Slaying</strong> — Mob combat skill tree, slayer tiers, and arena portal.</li>
+                </ul>
             </div>
 
-            <div id="page-dailyquests" class="page">
+            <!-- ═══ DAILY SYSTEMS (updated from Quests Tavern) ═══ -->
+            <div id="page-dailysystems" class="page">
                 <div class="panel-header">
                     <div class="panel-zone-badge" style="background-color: var(--color-citadel); color: #11111b;">North Citadel</div>
-                    <div class="panel-title">Daily Quests Tavern</div>
+                    <div class="panel-title">Daily Systems — Quests Tavern</div>
                 </div>
                 <div class="spec-row"><div class="spec-label">Footprint Dimensions</div><div class="spec-value">22 Blocks x 16 Blocks Base</div></div>
                 <div class="spec-row"><div class="spec-label">Zoning & Spacing</div><div class="spec-value">Anchors the far Northeast wing of the upper courtyard, providing symmetrical visual balance across from the Academy.</div></div>
-                <div class="spec-row"><div class="spec-label">Design Theme</div><div class="spec-value">A sprawling, double-decker adventurer's tavern structure with an open-air porch framework.</div></div>
+                <div class="spec-row"><div class="spec-label">Design Theme</div><div class="spec-value">A sprawling, double-decker adventurer's tavern structure with an open-air porch framework housing all daily activity dispatchers.</div></div>
+                <div class="spec-row"><div class="spec-label">NPCs Inside</div></div>
+                <ul class="npc-list">
+                    <li><strong>📋 Daily Tasks NPC</strong> — Issues rotating daily task assignments. Players speak to this NPC to receive and turn in their daily task list.</li>
+                    <li><strong>🏆 Daily Challenges NPC</strong> — Issues harder rotating daily challenges with premium rewards. Separate from tasks — these are skill-specific elite objectives.</li>
+                </ul>
             </div>
 
+            <!-- ═══ CRATES ═══ -->
             <div id="page-crates" class="page">
                 <div class="panel-header">
                     <div class="panel-zone-badge" style="background-color: var(--color-economy); color: #11111b;">East Economy</div>
@@ -424,46 +590,51 @@
                 <div class="spec-row"><div class="spec-label">Design Theme</div><div class="spec-value">An active trade courtyard with a premium merchant wagon structure seamlessly integrated into the front edge.</div></div>
             </div>
 
+            <!-- ═══ SHOPS ═══ -->
             <div id="page-shops" class="page">
                 <div class="panel-header">
                     <div class="panel-zone-badge" style="background-color: var(--color-economy); color: #11111b;">East Economy</div>
-                    <div class="panel-title">Economic Shop Rows</div>
+                    <div class="panel-title">Shop Town</div>
                 </div>
-                <div class="spec-row"><div class="spec-label">Footprint Dimensions</div><div class="spec-value">36 Blocks Wide x 14 Blocks Deep (Overall Area)</div></div>
-                <div class="spec-row"><div class="spec-label">Zoning & Spacing</div><div class="spec-value">Lines the northern edge of the East highway, keeping high economic player traffic tightly concentrated near the core.</div></div>
+                <div class="spec-row"><div class="spec-label">Footprint Dimensions</div><div class="spec-value">26 Blocks Wide x 16 Blocks Deep (Overall Area)</div></div>
+                <div class="spec-row"><div class="spec-label">Zoning & Spacing</div><div class="spec-value">Lines the eastern edge of the East highway, keeping high economic player traffic tightly concentrated near the core.</div></div>
                 <div class="spec-row"><div class="spec-label">Design Theme</div><div class="spec-value">Three interconnected, colorful medieval market storefronts utilizing distinct fabric canopy roof lines.</div></div>
             </div>
 
+            <!-- ═══ AUCTION HOUSE ═══ -->
             <div id="page-auction" class="page">
                 <div class="panel-header">
-                    <div class="panel-zone-badge" style="background-color: var(--color-economy); color: #11111b;">East Economy</div>
+                    <div class="panel-zone-badge" style="background-color: var(--color-commons); color: #11111b;">South Commons</div>
                     <div class="panel-title">Auction House Bank</div>
                 </div>
-                <div class="spec-row"><div class="spec-label">Footprint Dimensions</div><div class="spec-value">16 Blocks Wide x 20 Blocks Long</div></div>
+                <div class="spec-row"><div class="spec-label">Footprint Dimensions</div><div class="spec-value">17 Blocks Wide x 13 Blocks Long</div></div>
                 <div class="spec-row"><div class="spec-label">Zoning & Spacing</div><div class="spec-value">Pushed to the outer edge of the East road, anchoring the far border of the commercial trading district.</div></div>
                 <div class="spec-row"><div class="spec-label">Design Theme</div><div class="spec-value">A fortified, heavy masonry banking house that projects security and high financial priority.</div></div>
             </div>
 
+            <!-- ═══ ADVERTISING / RANKS ═══ -->
             <div id="page-advertising" class="page">
                 <div class="panel-header">
                     <div class="panel-zone-badge" style="background-color: var(--color-commons); color: #11111b;">South Commons</div>
                     <div class="panel-title">Advertising Rank Stage</div>
                 </div>
-                <div class="spec-row"><div class="spec-label">Footprint Dimensions</div><div class="spec-value">10 Blocks x 10 Blocks Stage Platform</div></div>
+                <div class="spec-row"><div class="spec-label">Footprint Dimensions</div><div class="spec-value">9 Blocks x 9 Blocks Stage Platform</div></div>
                 <div class="spec-row"><div class="spec-label">Zoning & Spacing</div><div class="spec-value">Positioned at the high-density Southeast inner junction crossway, directly across the street from the shopping district.</div></div>
                 <div class="spec-row"><div class="spec-label">Design Theme</div><div class="spec-value">A raised, open-air stone and timber town crier podium adorned with bold server rank banners.</div></div>
             </div>
 
+            <!-- ═══ DISCORD ═══ -->
             <div id="page-discord" class="page">
                 <div class="panel-header">
                     <div class="panel-zone-badge" style="background-color: var(--color-commons); color: #11111b;">South Commons</div>
                     <div class="panel-title">Discord Community Hub</div>
                 </div>
-                <div class="spec-row"><div class="spec-label">Footprint Dimensions</div><div class="spec-value">10 Blocks x 10 Blocks Octagonal Footprint</div></div>
+                <div class="spec-row"><div class="spec-label">Footprint Dimensions</div><div class="spec-value">9 Blocks x 9 Blocks Octagonal Footprint</div></div>
                 <div class="spec-row"><div class="spec-label">Zoning & Spacing</div><div class="spec-value">Located along the middle Southeast pathway, acting as a scenic landmark directly behind the advertising stage.</div></div>
                 <div class="spec-row"><div class="spec-label">Design Theme</div><div class="spec-value">An intricate, open-air spruce wood gazebo structure detailed with hanging flower baskets.</div></div>
             </div>
 
+            <!-- ═══ PVP BARRACKS ═══ -->
             <div id="page-pvp" class="page">
                 <div class="panel-header">
                     <div class="panel-zone-badge" style="background-color: var(--color-commons); color: #11111b;">South Commons</div>
@@ -474,6 +645,7 @@
                 <div class="spec-row"><div class="spec-label">Design Theme</div><div class="spec-value">A fortified stone military gatehouse outpost featuring sharp spikes and dark timber frames.</div></div>
             </div>
 
+            <!-- ═══ XP TRAINING YARD ═══ -->
             <div id="page-training" class="page">
                 <div class="panel-header">
                     <div class="panel-zone-badge" style="background-color: var(--color-commons); color: #11111b;">South Commons</div>
@@ -484,16 +656,18 @@
                 <div class="spec-row"><div class="spec-label">Design Theme</div><div class="spec-value">A rustic, muddy training courtyard filled with sword targets, archery dummies, and gear racks.</div></div>
             </div>
 
+            <!-- ═══ AFK FOUNTAIN PARK ═══ -->
             <div id="page-afk" class="page">
                 <div class="panel-header">
                     <div class="panel-zone-badge" style="background-color: var(--color-commons); color: #11111b;">South Commons</div>
                     <div class="panel-title">AFK Fountain Park</div>
                 </div>
                 <div class="spec-row"><div class="spec-label">Footprint Dimensions</div><div class="spec-value">30 Blocks Diameter Circle Boundary</div></div>
-                <div class="spec-row"><div class="spec-label">Zoning & Spacing</div><div class="spec-value">Anchors the terminal end of the South highway, enclosed behind a dense tree line to completely isolate ambient noises.</div></div>
+                <div class="spec-row"><div class="spec-label">Zoning & Spacing</div><div class="spec-value">Prominently positioned in the Northwest quadrant, enclosed behind a dense tree line to completely isolate ambient noises.</div></div>
                 <div class="spec-row"><div class="spec-label">Design Theme</div><div class="spec-value">A lush, circular garden park centered around a layered fountain and a custom leafy willow tree bench system.</div></div>
             </div>
 
+            <!-- ═══ PLAYERWARPS ═══ -->
             <div id="page-warps" class="page">
                 <div class="panel-header">
                     <div class="panel-zone-badge" style="background-color: var(--color-mystic); color: #11111b;">West Mystic</div>
@@ -504,6 +678,7 @@
                 <div class="spec-row"><div class="spec-label">Design Theme</div><div class="spec-value">An open-air stone runic pillar archway accented with glowing custom magical elements.</div></div>
             </div>
 
+            <!-- ═══ ONEBLOCK ═══ -->
             <div id="page-oneblock" class="page">
                 <div class="panel-header">
                     <div class="panel-zone-badge" style="background-color: var(--color-mystic); color: #11111b;">West Mystic</div>
@@ -514,6 +689,7 @@
                 <div class="spec-row"><div class="spec-label">Design Theme</div><div class="spec-value">A massive custom terrain landscape feature comprising a winding crescent-shaped hill that climbs up to a vertical portal vortex.</div></div>
             </div>
 
+            <!-- ═══ MAGE TOWER ═══ -->
             <div id="page-wizard" class="page">
                 <div class="panel-header">
                     <div class="panel-zone-badge" style="background-color: var(--color-mystic); color: #11111b;">West Mystic</div>
@@ -524,14 +700,74 @@
                 <div class="spec-row"><div class="spec-label">Design Theme</div><div class="spec-value">A tall, crooked medieval wizard tower topped with a steep magenta roof and floating crystalline fixtures.</div></div>
             </div>
 
+            <!-- ═══ RESOURCE NODE FACTORY (updated) ═══ -->
             <div id="page-resource" class="page">
                 <div class="panel-header">
                     <div class="panel-zone-badge" style="background-color: var(--color-mystic); color: #11111b;">West Mystic</div>
-                    <div class="panel-title">Resource Camp & Docks</div>
+                    <div class="panel-title">Resource Node Factory</div>
                 </div>
-                <div class="spec-row"><div class="spec-label">Footprint Dimensions</div><div class="spec-value">20 Blocks x 15 Blocks Total Layout</div></div>
-                <div class="spec-row"><div class="spec-label">Zoning & Spacing</div><div class="spec-value">Tucked neatly into the far Southwest corner boundary, completely separating survival progression utilities from the central economic zone.</div></div>
-                <div class="spec-row"><div class="spec-label">Design Theme</div><div class="spec-value">A rustic, active lumber camp and shipping harbor layout featuring crane arms and raw log piles.</div></div>
+                <div class="spec-row"><div class="spec-label">Footprint Dimensions</div><div class="spec-value">20 Blocks x 16 Blocks Total Layout</div></div>
+                <div class="spec-row"><div class="spec-label">Zoning & Spacing</div><div class="spec-value">Tucked into the far Southwest corner boundary, completely separating survival resource progression from the central economic zone.</div></div>
+                <div class="spec-row"><div class="spec-label">Design Theme</div><div class="spec-value">An industrial medieval factory compound with a smoking chimney, conveyor scaffolding, and heavy ironwork detailing. Two NPC stations are positioned at the factory entrance.</div></div>
+                <div class="spec-row"><div class="spec-label">NPCs Inside</div></div>
+                <ul class="npc-list">
+                    <li><strong>🔨 Crafting NPC</strong> — Handles all resource crafting recipes. Players bring raw materials here to craft refined items and components.</li>
+                    <li><strong>📊 Node Limits NPC</strong> — Manages player resource node limits. Displays current node count, max capacity, and upgrade options.</li>
+                </ul>
+            </div>
+
+            <!-- ═══════════════════════════════════════════════
+                 NEW AREA PANELS
+                 ═══════════════════════════════════════════════ -->
+
+            <!-- ═══ UPGRADES / PERKS AREA (new) ═══ -->
+            <div id="page-upgrades" class="page">
+                <div class="panel-header">
+                    <div class="panel-zone-badge" style="background-color: var(--color-citadel); color: #11111b;">North Citadel</div>
+                    <div class="panel-title">Upgrades / Perks Area</div>
+                </div>
+                <div class="spec-row"><div class="spec-label">Footprint Dimensions</div><div class="spec-value">19 Blocks x 13 Blocks Base</div></div>
+                <div class="spec-row"><div class="spec-label">Zoning & Spacing</div><div class="spec-value">Placed along the inner West side of the upper citadel tier, positioned between the AFK Park and the western highway for easy access from spawn.</div></div>
+                <div class="spec-row"><div class="spec-label">Design Theme</div><div class="spec-value">A scholarly perk library building with three glowing enchantment lecterns — one for each skill discipline. Bookshelves line the walls with rune-engraved perk scrolls.</div></div>
+                <div class="spec-row"><div class="spec-label">Perk Categories</div></div>
+                <ul class="npc-list">
+                    <li><strong>⛏ Mining Perks</strong> — Upgrades for ore yield, mining speed, rare ore discovery, auto-smelt, and fortune enhancements.</li>
+                    <li><strong>🌾 Farming Perks</strong> — Upgrades for crop growth rate, harvest yield, seed replanting, compost bonuses, and exotic crop access.</li>
+                    <li><strong>⚔ Slaying Perks</strong> — Upgrades for mob damage, XP multiplier, rare drop chance, lifesteal, and critical hit bonuses.</li>
+                </ul>
+            </div>
+
+            <!-- ═══ SPAWNER AREA (new) ═══ -->
+            <div id="page-spawners" class="page">
+                <div class="panel-header">
+                    <div class="panel-zone-badge" style="background-color: var(--color-mystic); color: #11111b;">West Mystic</div>
+                    <div class="panel-title">Spawner Area</div>
+                </div>
+                <div class="spec-row"><div class="spec-label">Footprint Dimensions</div><div class="spec-value">18 Blocks x 13 Blocks Base</div></div>
+                <div class="spec-row"><div class="spec-label">Zoning & Spacing</div><div class="spec-value">Positioned on the West side below the OneBlock portal, mirroring the Resource Node Factory layout but dedicated to mob spawner management.</div></div>
+                <div class="spec-row"><div class="spec-label">Design Theme</div><div class="spec-value">A dark, enclosed compound resembling the Resource Node Factory but themed with iron cages, soul-fire lanterns, and suspended spawner cages. The industrial factory aesthetic carries over with conveyor rails and processing stations.</div></div>
+                <div class="spec-row"><div class="spec-label">NPCs Inside</div></div>
+                <ul class="npc-list">
+                    <li><strong>🔧 Spawner Crafting NPC</strong> — Allows players to craft, upgrade, and modify mob spawners. Handles spawner tier progression and mob type selection.</li>
+                    <li><strong>📊 Spawner Limits NPC</strong> — Manages player spawner placement limits. Shows current spawner count, max allowed, and limit upgrade paths.</li>
+                </ul>
+            </div>
+
+            <!-- ═══ GENERATORS AREA (new) ═══ -->
+            <div id="page-generators" class="page">
+                <div class="panel-header">
+                    <div class="panel-zone-badge" style="background-color: var(--color-economy); color: #11111b;">East Economy</div>
+                    <div class="panel-title">Generators Area</div>
+                </div>
+                <div class="spec-row"><div class="spec-label">Footprint Dimensions</div><div class="spec-value">20 Blocks x 13 Blocks Base</div></div>
+                <div class="spec-row"><div class="spec-label">Zoning & Spacing</div><div class="spec-value">Positioned along the inner Southeast economy corridor between the Shop Town and the Auction House, providing a central hub for all generator management.</div></div>
+                <div class="spec-row"><div class="spec-label">Design Theme</div><div class="spec-value">A towering display wall showcase with three vertical generator columns — one for Mining, one for Farming, and one for Slaying. Each column features illuminated item frames showing generator tiers. An example working generator sits on a pedestal at the entrance.</div></div>
+                <div class="spec-row"><div class="spec-label">Features</div></div>
+                <ul class="npc-list">
+                    <li><strong>🖼 Generator Display Wall</strong> — A massive vertical showcase split into three columns (Mining / Farming / Slaying) showing every generator tier and its output stats.</li>
+                    <li><strong>📊 Limit NPC</strong> — Manages player generator placement limits. Displays current count, maximum allowed, and upgrade paths for expanding capacity.</li>
+                    <li><strong>⚡ Example Generator</strong> — A working demonstration generator on a raised pedestal so players can see exactly how generators function before purchasing.</li>
+                </ul>
             </div>
 
             <button class="btn-back" onclick="openPage('default')">Reset Overview View</button>
@@ -546,6 +782,40 @@
             const activePage = document.getElementById('page-' + pageId);
             if(activePage) {
                 activePage.classList.add('active');
+            }
+
+            // Highlight active building on map
+            const buildings = document.querySelectorAll('.building');
+            buildings.forEach(b => b.style.outline = 'none');
+            
+            // Find the building that maps to this page
+            const mapping = {
+                'leaderboard': 'b-leaderboard',
+                'topisland': 'b-topisland',
+                'skills': 'b-skills',
+                'dailysystems': 'b-dailysystems',
+                'crates': 'b-crates',
+                'shops': 'b-shops',
+                'auction': 'b-auction',
+                'advertising': 'b-advertising',
+                'discord': 'b-discord',
+                'pvp': 'b-pvpbarracks',
+                'training': 'b-trainingyard',
+                'afk': 'b-afkpark',
+                'warps': 'b-playerwarps',
+                'oneblock': 'b-oneblock',
+                'wizard': 'b-wizardtower',
+                'resource': 'b-resource',
+                'upgrades': 'b-upgrades',
+                'spawners': 'b-spawners',
+                'generators': 'b-generators'
+            };
+            
+            if (mapping[pageId]) {
+                const bldg = document.getElementById(mapping[pageId]);
+                if (bldg) {
+                    bldg.style.outline = '2px solid #f9e2af';
+                }
             }
         }
     </script>
