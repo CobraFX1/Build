@@ -667,27 +667,30 @@
            ═══════════════════════════════════════════════ */
         .building {
             position: absolute;
-            background: var(--bg-card);
-            border-radius: 3px;
-            padding: 5px;
+            background-color: var(--bg-card);
+            border-radius: 2px;
+            box-sizing: border-box;
+            padding: 6px;
             display: flex;
             flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            text-align: center;
-            font-size: 9px;
-            line-height: 1.2;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+            justify-content: space-between;
+            font-size: 0.7rem;
+            line-height: 1.1;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
             cursor: pointer;
-            transition: all 0.2s ease;
-            z-index: 6;
-            overflow: hidden;
+            transition: transform 0.2s, background-color 0.2s;
+            z-index: 3;
         }
 
         .building:hover {
-            transform: scale(1.08);
+            transform: scale(1.05);
+            background-color: #313244;
             z-index: 20;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6);
+        }
+
+        /* Override hover transform for rotated buildings */
+        .building.rotated:hover {
+            z-index: 20;
         }
 
         .building.selected {
@@ -709,18 +712,16 @@
         }
 
         .b-title {
-            font-weight: 700;
+            font-weight: bold;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
-            max-width: 100%;
-            font-size: 9px;
         }
 
         .b-dim {
-            font-size: 8px;
-            color: var(--text-dim);
-            margin-top: 1px;
+            font-size: 0.6rem;
+            color: var(--text-muted);
+            margin-top: 2px;
         }
 
         /* District borders */
@@ -760,120 +761,156 @@
             background: rgba(203, 166, 247, 0.1);
         }
 
-        /* Building positions */
-        #b-leaderboard {
-            top: 90px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 100px;
-            height: 125px;
+        /* Building positions - matching index.html layout */
+        /* NW QUADRANT */
+        #b-afkpark {
+            top: 40px;
+            left: 30px;
+            width: 175px;
+            height: 175px;
+            border-radius: 50%;
         }
 
-        #b-topisland {
-            top: 20px;
-            left: 42%;
+        #b-wizardtower {
+            top: 60px;
+            left: 260px;
             width: 60px;
             height: 60px;
         }
 
-        #b-skills {
-            top: 40px;
-            left: 40px;
-            width: 90px;
-            height: 90px;
+        /* NE QUADRANT */
+        #b-leaderboard {
+            top: 90px;
+            left: 385px;
+            width: 100px;
+            height: 120px;
         }
 
         #b-dailyquests {
-            top: 40px;
-            right: 40px;
+            top: 100px;
+            right: 25px;
             width: 110px;
             height: 80px;
+            transform: rotate(-12deg);
+        }
+
+        #b-dailyquests:hover {
+            transform: rotate(-12deg) scale(1.05);
         }
 
         #b-crates {
-            top: 220px;
-            right: 210px;
+            top: 230px;
+            right: 150px;
             width: 120px;
-            height: 90px;
+            height: 75px;
         }
 
-        #b-shops {
-            top: 450px;
-            right: 100px;
-            width: 180px;
-            height: 70px;
-        }
-
-        #b-auction {
-            top: 370px;
-            right: 40px;
+        /* WEST SIDE */
+        #b-oneblock {
+            top: 310px;
+            left: 25px;
             width: 80px;
-            height: 100px;
-        }
-
-        #b-advertising {
-            bottom: 220px;
-            right: 220px;
-            width: 50px;
             height: 50px;
-        }
-
-        #b-discord {
-            bottom: 160px;
-            right: 160px;
-            width: 50px;
-            height: 50px;
-        }
-
-        #b-pvpbarracks {
-            bottom: 40px;
-            right: 40px;
-            width: 70px;
-            height: 80px;
-        }
-
-        #b-trainingyard {
-            bottom: 140px;
-            left: 210px;
-            width: 60px;
-            height: 90px;
-        }
-
-        #b-afkpark {
-            bottom: 40px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 150px;
-            height: 150px;
-            border-radius: 50%;
         }
 
         #b-playerwarps {
-            top: 310px;
-            left: 210px;
+            top: 270px;
+            left: 285px;
             width: 30px;
             height: 30px;
         }
 
-        #b-oneblock {
-            top: 200px;
-            left: 30px;
-            width: 80px;
-            height: 40px;
+        #b-upgrades {
+            top: 240px;
+            left: 40px;
+            width: 95px;
+            height: 65px;
         }
 
-        #b-wizardtower {
-            top: 130px;
-            left: 140px;
+        #b-spawners {
+            top: 400px;
+            left: 30px;
+            width: 90px;
+            height: 65px;
+        }
+
+        /* EAST SIDE */
+        #b-shops {
+            top: 315px;
+            right: 25px;
+            width: 130px;
+            height: 80px;
+        }
+
+        #b-auction {
+            bottom: 170px;
+            right: 40px;
+            width: 85px;
+            height: 65px;
+        }
+
+        #b-generators {
+            bottom: 100px;
+            right: 175px;
+            width: 100px;
+            height: 65px;
+        }
+
+        /* SW QUADRANT */
+        #b-topisland {
+            bottom: 180px;
+            left: 90px;
             width: 60px;
             height: 60px;
         }
 
+        #b-trainingyard {
+            bottom: 20px;
+            left: 120px;
+            width: 110px;
+            height: 120px;
+            transform: rotate(-8deg);
+        }
+
+        #b-trainingyard:hover {
+            transform: rotate(-8deg) scale(1.05);
+        }
+
         #b-resource {
-            bottom: 40px;
-            left: 40px;
+            bottom: 30px;
+            left: 20px;
             width: 100px;
-            height: 75px;
+            height: 80px;
+        }
+
+        /* SE QUADRANT */
+        #b-skills {
+            bottom: 40px;
+            left: 365px;
+            width: 90px;
+            height: 80px;
+        }
+
+        #b-pvpbarracks {
+            bottom: 40px;
+            right: 55px;
+            width: 70px;
+            height: 80px;
+        }
+
+        /* SMALL UTILITY BUILDINGS */
+        #b-advertising {
+            bottom: 155px;
+            right: 185px;
+            width: 45px;
+            height: 45px;
+        }
+
+        #b-discord {
+            bottom: 110px;
+            right: 135px;
+            width: 45px;
+            height: 45px;
         }
 
         /* ═══════════════════════════════════════════════
@@ -1896,7 +1933,7 @@
                 Grid <span class="val">150×150</span>
             </div>
             <div class="stat-chip">
-                Structures <span class="val" id="stats-total">15</span>
+                Structures <span class="val" id="stats-total">19</span>
             </div>
             <div class="progress-ring">
                 <span class="progress-label">Build</span>
@@ -1907,7 +1944,7 @@
             </div>
             <div class="stat-chip">
                 <span class="stat-dot" style="background: var(--color-success);"></span>
-                Done <span class="val" id="stats-done">0</span>/<span class="val">15</span>
+                Done <span class="val" id="stats-done">0</span>/<span class="val">19</span>
             </div>
         </div>
     </div>
@@ -1957,6 +1994,12 @@
                 <span class="build-item-name">Quests Tavern</span>
                 <span class="build-item-dim">22×16</span>
             </div>
+            <div class="build-item" data-id="upgrades" data-zone="citadel" onclick="selectBuilding('upgrades')">
+                <div class="build-checkbox">✓</div>
+                <div class="build-item-dot" style="background: var(--color-citadel);"></div>
+                <span class="build-item-name">Upgrades / Perks</span>
+                <span class="build-item-dim">19×13</span>
+            </div>
 
             <div class="sidebar-section-title">East Economy</div>
             <div class="build-item" data-id="crates" data-zone="economy" onclick="selectBuilding('crates')">
@@ -1976,6 +2019,12 @@
                 <div class="build-item-dot" style="background: var(--color-economy);"></div>
                 <span class="build-item-name">Auction House</span>
                 <span class="build-item-dim">16×20</span>
+            </div>
+            <div class="build-item" data-id="generators" data-zone="economy" onclick="selectBuilding('generators')">
+                <div class="build-checkbox">✓</div>
+                <div class="build-item-dot" style="background: var(--color-economy);"></div>
+                <span class="build-item-name">Generators</span>
+                <span class="build-item-dim">20×13</span>
             </div>
 
             <div class="sidebar-section-title">South Commons</div>
@@ -2022,6 +2071,12 @@
                 <div class="build-item-dot" style="background: var(--color-mystic);"></div>
                 <span class="build-item-name">OneBlock Portal</span>
                 <span class="build-item-dim">16×8</span>
+            </div>
+            <div class="build-item" data-id="spawners" data-zone="mystic" onclick="selectBuilding('spawners')">
+                <div class="build-checkbox">✓</div>
+                <div class="build-item-dot" style="background: var(--color-mystic);"></div>
+                <span class="build-item-name">Spawner Area</span>
+                <span class="build-item-dim">18×13</span>
             </div>
             <div class="build-item" data-id="wizard" data-zone="mystic" onclick="selectBuilding('wizard')">
                 <div class="build-checkbox">✓</div>
@@ -2117,6 +2172,19 @@
                     <div id="b-auction" class="building economy" onclick="selectBuilding('auction')">
                         <div class="b-title">Auction House</div>
                         <div class="b-dim">16×20</div>
+                    </div>
+
+                    <div id="b-upgrades" class="building citadel" onclick="selectBuilding('upgrades')">
+                        <div class="b-title">Upgrades / Perks</div>
+                        <div class="b-dim">19×13</div>
+                    </div>
+                    <div id="b-spawners" class="building mystic" onclick="selectBuilding('spawners')">
+                        <div class="b-title">Spawner Area</div>
+                        <div class="b-dim">18×13</div>
+                    </div>
+                    <div id="b-generators" class="building economy" onclick="selectBuilding('generators')">
+                        <div class="b-title">Generators</div>
+                        <div class="b-dim">20×13</div>
                     </div>
 
                     <div id="b-advertising" class="building commons" onclick="selectBuilding('advertising')">
@@ -3038,6 +3106,123 @@
                         <div class="dev-note">Split into 2 zones: lumber camp (left) with log stacks and sawmill table,
                             docks (right) with water channel, crane arms from fence + chains, and a small rowboat.</div>
                         <div class="status-toggle" onclick="toggleBuildStatus('resource', this)">
+                            <div class="status-toggle-check">✓</div>
+                            <span class="status-toggle-label">Mark as Built</span>
+                            <span class="status-toggle-hint">Click to toggle</span>
+                        </div>
+                    </div>
+
+                    <!-- UPGRADES / PERKS -->
+                    <div id="page-upgrades" class="page">
+                        <div class="panel-header">
+                            <div class="panel-zone-badge" style="background: var(--color-citadel); color: #0c0c14;">North Citadel</div>
+                            <div class="panel-title">Upgrades & Perks Area</div>
+                            <div class="panel-subtitle">Player enhancement hub</div>
+                        </div>
+                        <div class="spec-group">
+                            <div class="spec-group-title">Dimensions</div>
+                            <div class="spec-row"><span class="spec-key">Footprint</span><span class="spec-val">19 × 13 blocks</span></div>
+                            <div class="spec-row"><span class="spec-key">Area</span><span class="spec-val">247 blocks²</span></div>
+                            <div class="spec-row"><span class="spec-key">Max Height</span><span class="spec-val">~8 blocks</span></div>
+                            <div class="spec-row"><span class="spec-key">Position</span><span class="spec-val">NW side, below AFK Park</span></div>
+                        </div>
+                        <div class="spec-group">
+                            <div class="spec-group-title">Block Palette</div>
+                            <div class="palette">
+                                <div class="palette-block">
+                                    <div class="palette-swatch" style="background: #8a8a8a;"></div>Polished Andesite
+                                </div>
+                                <div class="palette-block">
+                                    <div class="palette-swatch" style="background: #c0a060;"></div>Oak Planks
+                                </div>
+                                <div class="palette-block">
+                                    <div class="palette-swatch" style="background: #4a7a3a;"></div>Green Concrete
+                                </div>
+                                <div class="palette-block">
+                                    <div class="palette-swatch" style="background: #f0d070;"></div>Gold Accents
+                                </div>
+                            </div>
+                        </div>
+                        <div class="dev-note">Design as a merchant pavilion. Include upgrade stations for armor, weapons, and tools. Add NPC stands with armor displays.</div>
+                        <div class="status-toggle" onclick="toggleBuildStatus('upgrades', this)">
+                            <div class="status-toggle-check">✓</div>
+                            <span class="status-toggle-label">Mark as Built</span>
+                            <span class="status-toggle-hint">Click to toggle</span>
+                        </div>
+                    </div>
+
+                    <!-- SPAWNERS AREA -->
+                    <div id="page-spawners" class="page">
+                        <div class="panel-header">
+                            <div class="panel-zone-badge" style="background: var(--color-mystic); color: #0c0c14;">West Mystic</div>
+                            <div class="panel-title">Spawner Area</div>
+                            <div class="panel-subtitle">Mob generation control hub</div>
+                        </div>
+                        <div class="spec-group">
+                            <div class="spec-group-title">Dimensions</div>
+                            <div class="spec-row"><span class="spec-key">Footprint</span><span class="spec-val">18 × 13 blocks</span></div>
+                            <div class="spec-row"><span class="spec-key">Area</span><span class="spec-val">234 blocks²</span></div>
+                            <div class="spec-row"><span class="spec-key">Max Height</span><span class="spec-val">~6 blocks</span></div>
+                            <div class="spec-row"><span class="spec-key">Position</span><span class="spec-val">West side, below OneBlock</span></div>
+                        </div>
+                        <div class="spec-group">
+                            <div class="spec-group-title">Block Palette</div>
+                            <div class="palette">
+                                <div class="palette-block">
+                                    <div class="palette-swatch" style="background: #4a3a6a;"></div>Purple Concrete
+                                </div>
+                                <div class="palette-block">
+                                    <div class="palette-swatch" style="background: #2a2a4a;"></div>Blackstone
+                                </div>
+                                <div class="palette-block">
+                                    <div class="palette-swatch" style="background: #6a4a9a;"></div>Amethyst Block
+                                </div>
+                                <div class="palette-block">
+                                    <div class="palette-swatch" style="background: #1a1a3a;"></div>Dark Oak
+                                </div>
+                            </div>
+                        </div>
+                        <div class="dev-note">Create a control chamber for mob spawner management. Use pressure plates to toggle spawners. Add glowstone for ambient arcane lighting.</div>
+                        <div class="status-toggle" onclick="toggleBuildStatus('spawners', this)">
+                            <div class="status-toggle-check">✓</div>
+                            <span class="status-toggle-label">Mark as Built</span>
+                            <span class="status-toggle-hint">Click to toggle</span>
+                        </div>
+                    </div>
+
+                    <!-- GENERATORS -->
+                    <div id="page-generators" class="page">
+                        <div class="panel-header">
+                            <div class="panel-zone-badge" style="background: var(--color-economy); color: #0c0c14;">East Economy</div>
+                            <div class="panel-title">Generators</div>
+                            <div class="panel-subtitle">Power and resource generation systems</div>
+                        </div>
+                        <div class="spec-group">
+                            <div class="spec-group-title">Dimensions</div>
+                            <div class="spec-row"><span class="spec-key">Footprint</span><span class="spec-val">20 × 13 blocks</span></div>
+                            <div class="spec-row"><span class="spec-key">Area</span><span class="spec-val">260 blocks²</span></div>
+                            <div class="spec-row"><span class="spec-key">Max Height</span><span class="spec-val">~10 blocks</span></div>
+                            <div class="spec-row"><span class="spec-key">Position</span><span class="spec-val">East side, between shops and auction</span></div>
+                        </div>
+                        <div class="spec-group">
+                            <div class="spec-group-title">Block Palette</div>
+                            <div class="palette">
+                                <div class="palette-block">
+                                    <div class="palette-swatch" style="background: #6a8a5a;"></div>Green Concrete
+                                </div>
+                                <div class="palette-block">
+                                    <div class="palette-swatch" style="background: #4a5a3a;"></div>Dark Green Wool
+                                </div>
+                                <div class="palette-block">
+                                    <div class="palette-swatch" style="background: #c0d0a0;"></div>Lime Concrete
+                                </div>
+                                <div class="palette-block">
+                                    <div class="palette-swatch" style="background: #5a5a5a;"></div>Reinforced Stone
+                                </div>
+                            </div>
+                        </div>
+                        <div class="dev-note">Design as industrial facilities with repeaters, hoppers, and dispensers. Add redstone dust for visual effect. Include water channels for aesthetics.</div>
+                        <div class="status-toggle" onclick="toggleBuildStatus('generators', this)">
                             <div class="status-toggle-check">✓</div>
                             <span class="status-toggle-label">Mark as Built</span>
                             <span class="status-toggle-hint">Click to toggle</span>
